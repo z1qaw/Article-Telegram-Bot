@@ -1,24 +1,28 @@
 import re
-
-from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
+from loguru import logger
 
 
 class RuSanaParser:
-    def __init__(self, requests_session):
+    def __init__(self, requests_session: requests.Session):
         self.requests_session = requests_session
         self.uri = 'http://www.sana.sy/ru'
         self.db_table_name = 'ru_sana_table'
 
-    def get_latest_by_tag(self, tag):
-
+    def get_latest_by_tag(self, tag: str):
+        logger.debug(
+            f'{self.__class__.__name__}: Get new articles list by tag {tag}...')
         get_uri = self.uri + tag
 
         answer = self.requests_session.get(get_uri)
         answer_html = answer.content.decode()
         soup = BeautifulSoup(answer_html, "html.parser")
         article_block = soup.find('div', {'class': 'post-listing'})
-        article_list = article_block.find_all('article', {'class': 'item-list'})
+        article_list = article_block.find_all(
+            'article', {'class': 'item-list'})
 
         items = {'tag': tag,
                  'article_list': []}
@@ -32,23 +36,11 @@ class RuSanaParser:
         return items
 
     def get_latest(self):
-        print('BbcParser: Get new articles list...')
+        logger.info(f'{self.__class__.__name__}: Get new articles list...')
 
-        tags = [
-            '?cat=457',
-            '?cat=447',
-            '?cat=468',
-            '?cat=477',
-            '?cat=511',
-            '?cat=581',
-            '?cat=556',
-            '?cat=495',
-            '?cat=484',
-            '?cat=545',
-            '?cat=562',
-            '?cat=538',
-            '?cat=604'
-        ]
+        tag_ids = [457, 447, 468, 477, 511, 581,
+                   556, 495, 484, 545, 562, 538, 604]
+        tags = list(map(lambda tag_id: '/?cat=' + str(tag_id), tag_ids))
 
         latest_articles = []
 
@@ -58,8 +50,8 @@ class RuSanaParser:
 
         return latest_articles
 
-    def get_article(self, uri):
-        print('BbcParser: Get article: ' + uri)
+    def get_article(self, uri: str):
+        logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
         article_uri = self.uri + uri
         answer = self.requests_session.get(article_uri)
@@ -67,13 +59,15 @@ class RuSanaParser:
         soup = BeautifulSoup(answer_html, "html.parser")
 
         try:
-            article_title = soup.find('h1', {'class': re.compile('post-title')}).find('span', {'itemprop': 'name'}).text
+            article_title = soup.find('h1', {'class': re.compile(
+                'post-title')}).find('span', {'itemprop': 'name'}).text
         except:
             article_title = None
 
         new_text_blocks = []
         try:
-            text_blocks = soup.find('div', {'class': re.compile('post-inner')}).find_all('p')
+            text_blocks = soup.find(
+                'div', {'class': re.compile('post-inner')}).find_all('p')
             related_block = soup.find('div', {'class': re.compile('post-inner')}).find('section',
                                                                                        {'id': 'related_posts'})
             for text_block in text_blocks:
@@ -88,7 +82,8 @@ class RuSanaParser:
             pass
 
         try:
-            article_main_image = soup.find('img', {'class': re.compile('attachment-slider')}).get('src')
+            article_main_image = soup.find(
+                'img', {'class': re.compile('attachment-slider')}).get('src')
         except:
             article_main_image = None
 
@@ -105,7 +100,8 @@ class RuSanaParser:
 
         article_images = []
         try:
-            article_images_blocks = soup.find_all('figure', {'class': re.compile('gallery-item')})
+            article_images_blocks = soup.find_all(
+                'figure', {'class': re.compile('gallery-item')})
             if article_images_blocks:
                 for image_block in article_images_blocks:
                     image_uri = image_block.find('img')

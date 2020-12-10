@@ -1,40 +1,37 @@
 import re
-
-import requests
-from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+
+from requests import Session
+from loguru import logger
+from ..utils import get_html_soup_by_url
 
 
 class IranTodayParser:
-    def __init__(self, requests_session):
+    def __init__(self, requests_session: Session):
         self.requests_session = requests_session
         self.uri = 'http://iransegodnya.ru'
         self.db_table_name = 'irant_table'
 
     def get_latest(self):
-        print('IranToday: Get new articles list...')
-        get_uri = self.uri + '/news'
+        logger.info(f'{self.__class__.__name__}: Get new articles list...')
 
-        answer = self.requests_session.get(get_uri)
-        answer_html = answer.content.decode()
-        soup = BeautifulSoup(answer_html, "html.parser")
+        url = self.uri + '/news'
+        soup = get_html_soup_by_url(self.requests_session, url)
         article_list = soup.find_all('article', {'class': 'news-line'})
 
-        latest_articles = []
-
-        for article in article_list:
-            article_uri = urlparse(article.find('a').get('href')).path
-            latest_articles.append(article_uri)
+        latest_articles = list(map(
+            lambda article_block: urlparse(
+                article_block.find('a').get('href')).path,
+            article_list
+        ))
 
         return latest_articles
 
-    def get_article(self, uri):
-        print('IranToday: Get article: ' + uri)
+    def get_article(self, uri: str):
+        logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
-        article_uri = self.uri + uri
-        answer = self.requests_session.get(article_uri)
-        answer_html = answer.content.decode()
-        soup = BeautifulSoup(answer_html, "html.parser")
+        url = self.uri + uri
+        soup = get_html_soup_by_url(self.requests_session, url)
 
         try:
             article_title = soup.find('h1').text
@@ -52,6 +49,7 @@ class IranTodayParser:
         text_blocks = text_block.find_all('p')
         text_blocks_ = []
         article_images = []
+
         for block in text_blocks:
             if block.text:
                 if not re.findall('^\n\d+$', block.text):
@@ -67,7 +65,7 @@ class IranTodayParser:
             article_text = None
 
         article_body = {'title': article_title,
-                        'source': article_uri,
+                        'source': url,
                         'source_name': 'IranToday',
                         'publish_date': article_pub_date,
                         'main_image_link': article_main_image,

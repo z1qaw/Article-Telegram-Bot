@@ -6,7 +6,7 @@
 # "bot_token" - Токен для бота. Можно получить в Telegram, создав бота в @BotFather
 import re
 
-bot_token = "1296850212:AAFWE_gGPPaGqAbMN1ars2mtL-YyXKrLqEQ"
+bot_token = "1202191308:AAFR1oltwd9QozwXoei25e6xVHU6NuvTPNE"
 
 
 # "user_secret" - пароль для добавления текущего пользователя в список получателей.
@@ -16,7 +16,7 @@ user_secret = None
 
 
 # "database_uri" - ссылка на базу данных Heroku Postgres.
-database_url = "postgres://mzqqcoedhdsebf:a16a0f0ed3ffc6bda3a7d6bb49f80334691efb2791b5604e69cb443f7db96581@ec2-54-247-89-181.eu-west-1.compute.amazonaws.com:5432/d414854n8f56vc"
+database_url = "postgres://osafddrzqqyzlj:24085bd158ae9e516c622ba36b582f355050a2d1c844d89d6d1cec87ade17a5c@ec2-3-248-4-172.eu-west-1.compute.amazonaws.com:5432/d5nq1armneg9ml"
 
 
 # "key_words" - ключевые слова.
@@ -85,7 +85,7 @@ parsers = {
     'Y-Oman News': {
         'key_words': re.compile('.*'),
         'send_key_words': False,
-        'use': True
+        'use': False
     },
     'YeniSafak News': {
         'key_words': re.compile('.*'),

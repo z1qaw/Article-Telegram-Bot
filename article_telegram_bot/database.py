@@ -1,11 +1,11 @@
 import psycopg2
 import time
+import threading
+from loguru import logger
+from . import bot_config
 
-import bot_config
-from error import prepare_article_error
 
-
-class Database:
+class Database(threading.Thread):
     def __init__(self, path, retry=True, max_retry=10):
         self.connection = psycopg2.connect(path, sslmode='require')
         self.connection.autocommit = True
@@ -16,10 +16,11 @@ class Database:
     def check_table(self, table_name):
         for i in range(self.max_retry):
             try:
-                self.cursor.execute("CREATE TABLE IF NOT EXISTS \"{0}\" (uri text)".format(table_name))
+                self.cursor.execute(
+                    "CREATE TABLE IF NOT EXISTS \"{0}\" (uri text)".format(table_name))
                 break
             except Exception as error:
-                prepare_article_error(error)
+                logger.exception(error)
                 time.sleep(0.3)
 
             if not self.retry:
@@ -28,10 +29,11 @@ class Database:
     def delete_table(self, table_name):
         for i in range(self.max_retry):
             try:
-                self.cursor.execute("DROP TABLE IF EXISTS {0}".format(table_name))
+                self.cursor.execute(
+                    "DROP TABLE IF EXISTS {0}".format(table_name))
                 break
             except Exception as error:
-                prepare_article_error(error)
+                logger.exception(error)
                 time.sleep(0.1)
 
             if not self.retry:
@@ -40,10 +42,11 @@ class Database:
     def check_user_table(self):
         for i in range(self.max_retry):
             try:
-                self.cursor.execute("CREATE TABLE IF NOT EXISTS \"{0}\" (id integer, PRIMARY KEY (id))".format('users'))
+                self.cursor.execute(
+                    "CREATE TABLE IF NOT EXISTS \"{0}\" (id integer, PRIMARY KEY (id))".format('users'))
                 break
             except Exception as error:
-                prepare_article_error(error)
+                logger.exception(error)
                 time.sleep(0.3)
 
             if not self.retry:
@@ -53,10 +56,11 @@ class Database:
         self.check_user_table()
         for i in range(self.max_retry):
             try:
-                self.cursor.execute('INSERT INTO {0} (id) VALUES ({1})'.format('users', user_id))
+                self.cursor.execute(
+                    'INSERT INTO {0} (id) VALUES ({1})'.format('users', user_id))
                 break
             except Exception as error:
-                prepare_article_error(error)
+                logger.exception(error)
                 time.sleep(0.1)
 
             if not self.retry:
@@ -66,12 +70,13 @@ class Database:
         self.check_user_table()
         for i in range(self.max_retry):
             try:
-                self.cursor.execute("SELECT COUNT(*) FROM {0} WHERE id = {1}".format('users', user_id))
+                self.cursor.execute(
+                    "SELECT COUNT(*) FROM {0} WHERE id = {1}".format('users', user_id))
                 exists = self.cursor.fetchone()
                 is_exists = True if exists[0] else False
                 return is_exists
             except Exception as error:
-                prepare_article_error(error)
+                logger.exception(error)
                 time.sleep(0.2)
 
             if not self.retry:
@@ -81,10 +86,11 @@ class Database:
         self.check_user_table()
         for i in range(self.max_retry):
             try:
-                self.cursor.execute("DELETE FROM {0} WHERE id = {1}".format('users', user_id))
+                self.cursor.execute(
+                    "DELETE FROM {0} WHERE id = {1}".format('users', user_id))
                 break
             except Exception as error:
-                prepare_article_error(error)
+                logger.exception(error)
                 time.sleep(0.2)
 
             if not self.retry:
@@ -110,10 +116,11 @@ class Database:
     def insert_uri(self, table_name, element):
         for i in range(self.max_retry):
             try:
-                self.cursor.execute('INSERT INTO {0} (uri) VALUES (\'{1}\')'.format(table_name, element))
+                self.cursor.execute(
+                    'INSERT INTO {0} (uri) VALUES (\'{1}\')'.format(table_name, element))
                 break
             except Exception as error:
-                prepare_article_error(error)
+                logger.exception(error)
                 time.sleep(0.1)
 
             if not self.retry:
@@ -122,7 +129,8 @@ class Database:
     def is_exist(self, table_name, element):
         for i in range(self.max_retry):
             try:
-                self.cursor.execute("SELECT COUNT(*) FROM {0} WHERE uri = \'{1}\'".format(table_name, element))
+                self.cursor.execute(
+                    "SELECT COUNT(*) FROM {0} WHERE uri = \'{1}\'".format(table_name, element))
                 exists = self.cursor.fetchone()
                 is_exists = True if exists[0] else False
                 return is_exists
@@ -132,12 +140,5 @@ class Database:
             if not self.retry:
                 break
 
-def main():
-    db = Database(bot_config.database_url)
-
-    while True:
-        print(db.get_users_list())
-
-
-if __name__ == '__main__':
-    main()
+    def start():
+        pass

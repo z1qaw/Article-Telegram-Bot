@@ -1,23 +1,29 @@
-import tools
-
-from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+
+from loguru import logger
+from requests import Session
+
+from ... import tools
+from ..utils import get_html_soup_by_url
 
 
 class ReutersParser:
-    def __init__(self, requests_session):
+    def __init__(self, requests_session: Session):
         self.requests_session = requests_session
-        self.uri = 'https://www.reuters.com'
+        self.uri = 'https://www.reuters.com.'
         self.api_url = 'https://wireapi.reuters.com/v3/'
         self.db_table_name = 'reuters_table'
 
-    def get_latest_by_tag(self, tag):
+    def get_latest_by_tag(self, tag: str):
+        logger.debug(
+            f'{self.__class__.__name__}: Get new articles list by tag {tag}...')
+
         if tag == 'world':
             tag = 'news/world'
-        get_uri = self.api_url + 'feed/url/www.reuters.com/' + tag
 
-        answer = self.requests_session.get(get_uri)
-        answer_json = answer.json()
+        url = self.uri + tag
+
+        soup = get_html_soup_by_url(self.requests_session, url)
         article_list = answer_json['wireitems']
 
         items = {'tag': tag,
@@ -33,7 +39,7 @@ class ReutersParser:
         return items
 
     def get_latest(self):
-        print('ReutersParser: Get new articles list...')
+        logger.info(f'{self.__class__.__name__}: Get new articles list...')
 
         tags = [
             'world',
@@ -46,31 +52,33 @@ class ReutersParser:
 
         return latest_articles
 
-    def get_article(self, uri):
-        print('ReutersParser: Get article: ' + uri)
+    def get_article(self, uri: str):
+        logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
-        article_uri = self.uri + uri
-        answer = self.requests_session.get(article_uri)
-        answer_html = answer.content.decode()
-        soup = BeautifulSoup(answer_html, "html.parser")
+        url = self.uri + uri
+        soup = get_html_soup_by_url(self.requests_session, url)
 
         try:
-            article_title = soup.find('h1', {'class': 'ArticleHeader_headline'}).text
+            article_title = soup.find(
+                'h1', {'class': 'ArticleHeader_headline'}).text
         except:
             article_title = None
 
-        text_blocks = soup.find('div', {'class': 'StandardArticleBody_body'}).find_all('p')
+        text_blocks = soup.find(
+            'div', {'class': 'StandardArticleBody_body'}).find_all('p')
 
         article_main_image = None
         try:
-            image_container = soup.find('div', {'class': 'PrimaryAsset_container'}).find('img')
+            image_container = soup.find(
+                'div', {'class': 'PrimaryAsset_container'}).find('img')
             clean_src = image_container.get('src')
             article_main_image = 'https:' + tools.delete_query(clean_src, 'w')
         except:
             pass
 
         try:
-            article_pub_date = soup.find('div', {'class': 'ArticleHeader_date'}).text
+            article_pub_date = soup.find(
+                'div', {'class': 'ArticleHeader_date'}).text
         except:
             article_pub_date = None
 
@@ -96,10 +104,11 @@ class ReutersParser:
                 image_uri_block = image_block.find('img')
                 if image_uri_block:
                     image_data_src = image_uri_block.get('src')
-                    article_images.append('https:' + tools.delete_query(image_data_src, 'w'))
+                    article_images.append(
+                        'https:' + tools.delete_query(image_data_src, 'w'))
 
         article_body = {'title': article_title,
-                        'source': article_uri,
+                        'source': url,
                         'source_name': 'Reuters.com',
                         'publish_date': article_pub_date,
                         'main_image_link': article_main_image,

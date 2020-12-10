@@ -2,15 +2,16 @@ import re
 
 import requests
 from bs4 import BeautifulSoup
+from loguru import logger
 
 
 class YeniSafakParser:
-    def __init__(self, requests_session):
+    def __init__(self, requests_session: requests.Session):
         self.requests_session = requests_session
         self.uri = 'https://www.yenisafak.com'
         self.db_table_name = 'yenisafak_table'
 
-    def get_latest_by_tag(self, tag):
+    def get_latest_by_tag(self, tag: str):
         get_uri = self.uri + '/en/' + tag
 
         answer = self.requests_session.get(get_uri)
@@ -30,7 +31,7 @@ class YeniSafakParser:
         return items
 
     def get_latest(self):
-        print('YeniSafakParser: Get new articles list...')
+        logger.info(f'{self.__class__.__name__}: Get new articles list...')
 
         tags = [
             'turkeyeconomy',
@@ -46,8 +47,8 @@ class YeniSafakParser:
 
         return latest_articles
 
-    def get_article(self, uri):
-        print('YeniSafakParser: Get article: ' + uri)
+    def get_article(self, uri: str):
+        logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
         article_uri = self.uri + uri
         answer = self.requests_session.get(article_uri)

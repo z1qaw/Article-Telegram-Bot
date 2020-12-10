@@ -2,20 +2,19 @@ import time
 
 import requests
 import telebot
-from urllib3 import HTTPSConnectionPool
 
-import tools
-import bot_config
+from . import tools
+from . import bot_config
 
 from telebot import apihelper
 from io import BytesIO
 from telebot.types import InputMediaPhoto
 import urllib.parse
 
-from error import prepare_article_error
+from loguru import logger
 
 if bot_config.use_proxy:
-    print('Bot use proxy.')
+    logger.info('Bot use proxy.')
     apihelper.proxy = bot_config.proxies
 
 
@@ -29,13 +28,14 @@ class ArticleBot:
         self.translate_links = translate['translate_links']
         self.database = database
 
-    def send_article(self, article, logging=True):
+    def send_article(self, article):
         current_users = self.database.get_users_list()
         if not current_users:
             return 1
-        print(current_users)
+        logger.info(current_users)
 
-        print('Bot: {0} - Try to send article to all users...'.format(article.id))
+        logger.info(
+            'Bot: {0} - Try to send article to all users...'.format(article.id))
         images_to_send = []
 
         for image_link in tools.delete_duplicates([article.main_image_link] + article.article_images):
@@ -44,13 +44,14 @@ class ArticleBot:
                     try:
                         response = self.requests_session.get(image_link)
                     except requests.exceptions.SSLError:
-                        response = self.requests_session.get(image_link, verify=False)
+                        response = self.requests_session.get(
+                            image_link, verify=False)
                     if response.status_code == 200:
                         if len(response.content) > 0:
                             img_bytes = BytesIO(response.content)
                             images_to_send.append(InputMediaPhoto(img_bytes))
                 except Exception as error:
-                    prepare_article_error(error)
+                    logger.exception(error)
                 time.sleep(0.2)
 
         translated = {'article_title': None,
@@ -64,7 +65,7 @@ class ArticleBot:
                                                                                       self.translate_language]))[
                         'text'][0]
                 except Exception as error:
-                    prepare_article_error(error)
+                    logger.exception(error)
             if article.text:
                 try:
                     translated['article_text'] = self.translator.translate(article.text,
@@ -72,7 +73,7 @@ class ArticleBot:
                                                                                      self.translate_language]))['text'][
                         0]
                 except Exception as error:
-                    prepare_article_error(error)
+                    logger.exception(error)
 
         if not self.translate or (article.language == self.translate_language):
             article_title = article.title
@@ -88,11 +89,15 @@ class ArticleBot:
                                                                                 article_text)
 
         translate_link = 'https://translate.google.com/?source=gtx_c#view=home&op=translate&sl={0}&tl={1}&text={2}'.format(
-            article.language, self.translate_language, urllib.parse.quote(article.source)
+            article.language, self.translate_language, urllib.parse.quote(
+                article.source)
         )
-        translate_link_text = '[Перевод статьи на Google Translate]({0})'.format(translate_link)
+        translate_link_text = '[Перевод статьи на Google Translate]({0})'.format(
+            translate_link)
 
-        re_text = 'Ключевые слова:\n' + (', '.join(article.match_words) if article.match_words else "Не обнаружено.")
+        re_text = 'Ключевые слова:\n' + \
+            (', '.join(article.match_words)
+             if article.match_words else "Не обнаружено.")
 
         is_forward = False
         message_to_forward = None
@@ -101,60 +106,74 @@ class ArticleBot:
 
             self.bot.send_chat_action(user_id, 'typing')
 
-            print('Bot: User {0} - {1} - Try to send separator...'.format(str(user_id), article.id))
+            logger.debug(
+                'Bot: User {0} - {1} - Try to send separator...'.format(str(user_id), article.id))
             self.bot.send_message(user_id, '-' * 10)
-            print('Bot: User {0} - {1} -  Separator sented'.format(str(user_id), article.id))
+            logger.info(
+                'Bot: User {0} - {1} -  Separator sented'.format(str(user_id), article.id))
 
             if article.send_key_words:
-                print('Bot: User {0} - {1} - Try to send key words...'.format(str(user_id), article.id))
+                logger.info(
+                    'Bot: User {0} - {1} - Try to send key words...'.format(str(user_id), article.id))
                 self.bot.send_message(user_id, re_text)
-                print('Bot: User {0} - {1} -  Key words sented'.format(str(user_id), article.id))
+                logger.info(
+                    'Bot: User {0} - {1} -  Key words sented'.format(str(user_id), article.id))
 
             if self.translate_links and (article.language != self.translate_language):
-                print('Bot: User {0} - {1} - Try to send translate link...'.format(str(user_id), article.id))
-                self.bot.send_message(user_id, translate_link_text, disable_web_page_preview=True, parse_mode='Markdown')
-                print('Bot: User {0} - {1} -  Translate link sented'.format(str(user_id), article.id))
+                logger.info(
+                    'Bot: User {0} - {1} - Try to send translate link...'.format(str(user_id), article.id))
+                self.bot.send_message(
+                    user_id, translate_link_text, disable_web_page_preview=True, parse_mode='Markdown')
+                logger.info(
+                    'Bot: User {0} - {1} -  Translate link sented'.format(str(user_id), article.id))
 
             if len(text) > 4096:
                 message_part = 0
                 for x in range(0, len(text), 4096):
                     try:
-                        print('Bot: User {0} - {1} - Try to send text message part...'.format(str(user_id), article.id))
+                        logger.info(
+                            'Bot: User {0} - {1} - Try to send text message part...'.format(str(user_id), article.id))
                         self.bot.send_message(user_id, text[x:x + 4096],
                                               disable_web_page_preview=True)
-                        print('Bot: User {0} - {1} - Message part sented'.format(str(user_id), article.id))
+                        logger.info(
+                            'Bot: User {0} - {1} - Message part sented'.format(str(user_id), article.id))
                     except Exception as error:
-                        prepare_article_error(error)
+                        logger.exception(error)
 
                     message_part += 1
             else:
                 try:
-                    print('Bot: User {0} - {1} - Try to send full text message...'.format(str(user_id), article.id))
-                    self.bot.send_message(user_id, text, disable_web_page_preview=True)
-                    print('Bot: User {0} - {1} - Message sented'.format(str(user_id), article.id))
+                    logger.info(
+                        'Bot: User {0} - {1} - Try to send full text message...'.format(str(user_id), article.id))
+                    self.bot.send_message(
+                        user_id, text, disable_web_page_preview=True)
+                    logger.info(
+                        'Bot: User {0} - {1} - Message sented'.format(str(user_id), article.id))
                 except Exception as error:
-                    prepare_article_error(error)
+                    logger.exception(error)
 
                 self.bot.send_chat_action(user_id, 'upload_photo')
 
             if not is_forward:
                 is_forward = True
                 if images_to_send:
-                    print('Bot: User {0} - {1} - Try to send photos'.format(str(user_id), article.id))
+                    logger.info(
+                        'Bot: User {0} - {1} - Try to send photos'.format(str(user_id), article.id))
                     try:
-                        message_to_forward = self.bot.send_media_group(user_id, images_to_send)
-                        print('Bot: User {0} - {1} - Photos sented'.format(str(user_id), article.id))
+                        message_to_forward = self.bot.send_media_group(
+                            user_id, images_to_send)
+                        logger.info(
+                            'Bot: User {0} - {1} - Photos sented'.format(str(user_id), article.id))
                     except Exception as error:
-                        prepare_article_error(error)
+                        logger.exception(error)
             else:
                 try:
-                    print('Bot: User {0} - {1} - Try to send photos'.format(str(user_id), article.id))
+                    logger.info(
+                        'Bot: User {0} - {1} - Try to send photos'.format(str(user_id), article.id))
                     self.bot.send_media_group(user_id,
                                               [InputMediaPhoto(
                                                   image.photo[0].file_id) for image in message_to_forward])
-                    print('Bot: User {0} - {1} - Photos sented'.format(str(user_id), article.id))
+                    logger.info(
+                        'Bot: User {0} - {1} - Photos sented'.format(str(user_id), article.id))
                 except Exception as error:
-                    prepare_article_error(error)
-
-        if logging:
-            print(article)
+                    logger.exception(error)

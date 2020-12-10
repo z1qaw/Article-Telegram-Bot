@@ -1,18 +1,20 @@
 import re
-
-from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
+from loguru import logger
 
 
 class RuEuronewsParser:
-    def __init__(self, requests_session):
+    def __init__(self, requests_session: requests.Session):
         self.requests_session = requests_session
         self.uri = 'https://ru.euronews.com'
         self.db_table_name = 'ru_euronews_table'
         self.full_log = True
 
     def get_latest(self):
-        print('RuEuroNews: Get new articles list...')
+        logger.info(f'{self.__class__.__name__}: Get new articles list...')
         get_uri = self.uri + '/just-in'
 
         answer = self.requests_session.get(get_uri)
@@ -30,8 +32,8 @@ class RuEuronewsParser:
 
         return items
 
-    def get_article(self, uri):
-        print('RuEuroNews: Get article: ' + uri)
+    def get_article(self, uri: str):
+        logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
         article_uri = self.uri + uri
         answer = self.requests_session.get(article_uri)

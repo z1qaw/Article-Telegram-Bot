@@ -3,7 +3,7 @@ import colorama
 import secrets
 import string
 
-import tools
+from . import tools
 
 colorama.init()
 

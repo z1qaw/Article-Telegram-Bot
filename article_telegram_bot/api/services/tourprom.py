@@ -1,19 +1,21 @@
 import datetime
-import urllib3
 
+import requests
+import urllib3
 from bs4 import BeautifulSoup
+from loguru import logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class TourpromParser:
-    def __init__(self, requests_session):
+    def __init__(self, requests_session: requests.Session):
         self.requests_session = requests_session
         self.uri = 'https://www.tourprom.ru'
         self.db_table_name = 'tourprom_table'
 
     def get_latest(self):
-        print('Tourprom: get latest...')
+        logger.info(f'{self.__class__.__name__}: Get new articles list...')
         tags = [
             '/news',
             '/pressreleases'
@@ -26,13 +28,16 @@ class TourpromParser:
             answer_html = answer.content.decode()
             soup = BeautifulSoup(answer_html, "html.parser")
 
-            articles_block = soup.find('div', {'class': 'block news-list__list'})
+            articles_block = soup.find(
+                'div', {'class': 'block news-list__list'})
 
             articles_blocks = None
             if tag == '/news':
-                articles_blocks = articles_block.find_all('div', {'class': 'news-list__item-wrap'})
+                articles_blocks = articles_block.find_all(
+                    'div', {'class': 'news-list__item-wrap'})
             elif tag == '/pressreleases':
-                articles_blocks = articles_block.find_all('div', {'class': 'pressrelease-item'})
+                articles_blocks = articles_block.find_all(
+                    'div', {'class': 'pressrelease-item'})
 
             for block in articles_blocks:
                 title_uri = None
@@ -49,15 +54,14 @@ class TourpromParser:
 
         return articles_uri
 
-    def get_article(self, uri):
-        print('TourpromParser: Get article: ' + uri)
+    def get_article(self, uri: str):
+        logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
         article_uri = self.uri + uri
         answer = self.requests_session.get(article_uri, verify=False)
         answer_html = answer.content.decode()
         soup = BeautifulSoup(answer_html, "html.parser")
         article_block = soup.find('div', {'class': 'panel'})
-
 
         try:
             article_title = article_block.find('h1').text
@@ -66,9 +70,11 @@ class TourpromParser:
 
         text_block = None
         if 'pressrelease' in uri:
-            text_block = article_block.find('div', {'class': 'block block--padding'})
+            text_block = article_block.find(
+                'div', {'class': 'block block--padding'})
         elif 'news' in uri:
-            text_block = article_block.find('div', {'class': 'block panel-body-wrap--padding news-detail'})
+            text_block = article_block.find(
+                'div', {'class': 'block panel-body-wrap--padding news-detail'})
 
         text_blocks = text_block.find_all('p')
 
