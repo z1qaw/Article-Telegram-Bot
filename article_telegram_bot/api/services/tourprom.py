@@ -1,9 +1,12 @@
 import datetime
+import re
 
 import requests
 import urllib3
 from bs4 import BeautifulSoup
 from loguru import logger
+
+from ..utils import get_html_soup_by_url
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -57,49 +60,52 @@ class TourpromParser:
     def get_article(self, uri: str):
         logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
-        article_uri = self.uri + uri
-        answer = self.requests_session.get(article_uri, verify=False)
-        answer_html = answer.content.decode()
-        soup = BeautifulSoup(answer_html, "html.parser")
-        article_block = soup.find('div', {'class': 'panel'})
-
         try:
-            article_title = article_block.find('h1').text
+            article_uri = self.uri + uri
+            soup = get_html_soup_by_url(
+                self.requests_session, article_uri, verify=False)
+            article_block = soup.find('div', {'class': 'panel'})
+
+            try:
+                article_title = article_block.find('h1').text
+            except:
+                article_title = None
+
+            text_block = None
+            if 'pressrelease' in uri:
+                text_block = article_block.find(
+                    'div', {'class': re.compile('block block--padding')})
+            elif 'news' in uri:
+                text_block = article_block.find(
+                    'div', {'class': re.compile('block panel-body-wrap--padding news-detail')})
+
+            text_blocks = text_block.find_all('p')
+
+            try:
+                article_main_image = self.uri + article_block.find('div', {'class': 'photo-wrap'}).find('img', {
+                    'class': 'photo__img'}).get('src')
+            except:
+                article_main_image = None
+
+            text_blocks_ = []
+
+            for block in text_blocks:
+                if not re.search('Подпишитесь на новости', block.text):
+                    text_blocks_.append(block.text)
+
+            try:
+                article_text = '\n\n'.join(text_blocks_)
+            except:
+                article_text = None
+
+            article_body = {'title': article_title,
+                            'source': article_uri,
+                            'source_name': 'TourProm.ru',
+                            'publish_date': str(datetime.datetime.now()),
+                            'main_image_link': article_main_image,
+                            'article_images': [],
+                            'text': article_text,
+                            'language': 'ru'}
+            return article_body
         except:
-            article_title = None
-
-        text_block = None
-        if 'pressrelease' in uri:
-            text_block = article_block.find(
-                'div', {'class': 'block block--padding'})
-        elif 'news' in uri:
-            text_block = article_block.find(
-                'div', {'class': 'block panel-body-wrap--padding news-detail'})
-
-        text_blocks = text_block.find_all('p')
-
-        try:
-            article_main_image = self.uri + article_block.find('div', {'class': 'photo-wrap'}).find('img', {
-                'class': 'photo__img'}).get('src')
-        except:
-            article_main_image = None
-
-        text_blocks_ = []
-
-        for block in text_blocks:
-            text_blocks_.append(block.text)
-
-        try:
-            article_text = '\n\n'.join(text_blocks_)
-        except:
-            article_text = None
-
-        article_body = {'title': article_title,
-                        'source': article_uri,
-                        'source_name': 'TourProm.ru',
-                        'publish_date': str(datetime.datetime.now()),
-                        'main_image_link': article_main_image,
-                        'article_images': [],
-                        'text': article_text,
-                        'language': 'ru'}
-        return article_body
+            return None

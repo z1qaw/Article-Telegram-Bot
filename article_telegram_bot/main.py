@@ -9,9 +9,9 @@ from yandex_translate import YandexTranslate
 from . import bot_config
 from . import database as db_api
 from . import worker
-from .api import (arabianbusiness, bbc, inosmi, iransegodnya, lenta, nna,
-                  reuters, ria, ru_euronews, sana, sana_ru, tourprom,
-                  yenisafak)
+from .api.services import (arabianbusiness, bbc, inosmi, iransegodnya, lenta, nna,
+                           reuters, ria, ru_euronews, sana, sana_ru, tourprom,
+                           yenisafak)
 from .bot import ArticleBot
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -19,8 +19,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def main():
     """ App Entry point"""
+    logger.remove()
     logger.add(
-        sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO")
+        sys.stderr, format="{time} [{level}] {message}", level="INFO", colorize=True)
 
     logger.info('-' * 20)
     logger.info('Article Telegram Bot [HEROKU EDITION]', '\n')

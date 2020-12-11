@@ -65,7 +65,8 @@ class ArticleBot:
                                                                                       self.translate_language]))[
                         'text'][0]
                 except Exception as error:
-                    logger.exception(error)
+                    logger.warning(
+                        'Can"t translate text using Yandex.Translate')
             if article.text:
                 try:
                     translated['article_text'] = self.translator.translate(article.text,
@@ -73,7 +74,8 @@ class ArticleBot:
                                                                                      self.translate_language]))['text'][
                         0]
                 except Exception as error:
-                    logger.exception(error)
+                    logger.warning(
+                        'Can"t translate text using Yandex.Translate')
 
         if not self.translate or (article.language == self.translate_language):
             article_title = article.title
@@ -103,8 +105,11 @@ class ArticleBot:
         message_to_forward = None
 
         for user_id in current_users:
-
-            self.bot.send_chat_action(user_id, 'typing')
+            try:
+                self.bot.send_chat_action(user_id, 'typing')
+            except telebot.apihelper.ApiTelegramException:
+                current_users.remove(user_id)
+                continue
 
             logger.debug(
                 'Bot: User {0} - {1} - Try to send separator...'.format(str(user_id), article.id))

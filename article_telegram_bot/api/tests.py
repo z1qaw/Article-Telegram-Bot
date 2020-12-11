@@ -8,6 +8,7 @@ from .services.bbc import BbcParser
 from .services.inosmi import InoSmiParser
 from .services.iransegodnya import IranTodayParser
 from .services.lenta import LentaParser
+from .services.nna import NnaParser
 from .services.reuters import ReutersParser
 
 
@@ -56,7 +57,6 @@ class TestLentaService(TestCase):
     def test_get_latest(self):
         parser = LentaParser(requests.session())
         result = parser.get_latest()
-        print(result)
         self.assertTrue(result)
 
     def test_get_article(self):
@@ -64,11 +64,27 @@ class TestLentaService(TestCase):
         self.assertTrue(parser.get_article('/post/view/3787'))
 
 
+class TestNnaService(TestCase):
+    def test_get_latest(self):
+        parser = NnaParser(requests.session())
+        result = parser.get_latest()
+        self.assertTrue(result)
+
+    def test_get_article(self):
+        parser = NnaParser(requests.session())
+        self.assertTrue(None)
+
+
 class TestReutersService(TestCase):
     def test_get_latest(self):
         parser = ReutersParser(requests.session())
         result = parser.get_latest()
-        print(result)
+        self.assertTrue(result)
+
+    def test_get_article(self):
+        parser = ReutersParser(requests.session())
+        result = parser.get_article(
+            'https://www.reuters.com/article/us-ethiopia-conflict/u-s-senators-seek-possible-sanctions-over-ethiopia-conflict-abuses-idUSKBN28K139')
         self.assertTrue(result)
 
 

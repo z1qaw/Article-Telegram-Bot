@@ -77,7 +77,7 @@ class ArticleQueueThread(threading.Thread):
                     try:
                         self.telegram_bot.send_article(last_article)
                     except Exception as error:
-                        prepare_article_error(error)
+                        logger.exception(error)
             time.sleep(1)
 
 

@@ -1,8 +1,9 @@
+import re
 import time
 from urllib.parse import urlsplit
 
-from requests import Session
 from loguru import logger
+from requests import Session
 
 from ..utils import get_html_soup_by_url
 
@@ -56,18 +57,18 @@ class BbcParser:
         soup = get_html_soup_by_url(self.requests_session, url)
 
         try:
-            article_title = soup.find('h1', {'class': 'story-body__h1'}).text
+            article_title = soup.find('h1', {'class': 'main-heading'}).text
         except:
             article_title = None
         try:
-            text_blocks = soup.find(
-                'div', {'class': 'story-body__inner'}).find_all('p')
+            text_blocks = soup.find_all(
+                'div', {'class': re.compile('RichTextComponentWrapper')})
         except:
             text_blocks = []
 
         try:
             article_main_image = soup.find(
-                'img', {'class': 'js-image-replace'}).get('src')
+                'meta', {'property': 'og:image'}).get('content')
         except:
             article_main_image = None
 
@@ -80,7 +81,13 @@ class BbcParser:
         text_blocks_ = []
 
         for block in text_blocks:
-            text_blocks_.append(block.text)
+            if block.find('p'):
+                text = block.find('p').text
+                text = re.sub(
+                    '\.css\-\w+\-\w+Text\{font\-\w+\:\w+\;\}', '', text)
+                if re.search('\.css', text):
+                    continue
+                text_blocks_.append(text)
 
         try:
             article_text = '\n\n'.join(text_blocks_)
@@ -88,15 +95,6 @@ class BbcParser:
             article_text = None
 
         article_images = []
-        article_images_blocks = soup.find_all(
-            'figure', {'class': 'media-landscape'})
-        if article_images_blocks:
-            for image_block in article_images_blocks:
-                image_uri = image_block.find(
-                    'img', {'class': 'responsive-image__img'})
-                if image_uri:
-                    image_data_src = image_uri.get('src')
-                    article_images.append(image_data_src)
 
         article_body = {'title': article_title,
                         'source': url,

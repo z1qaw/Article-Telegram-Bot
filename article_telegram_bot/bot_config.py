@@ -80,7 +80,7 @@ parsers = {
     'NNA News': {
         'key_words': re.compile('.*'),
         'send_key_words': False,
-        'use': True
+        'use': False
     },
     'Y-Oman News': {
         'key_words': re.compile('.*'),
