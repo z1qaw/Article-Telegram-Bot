@@ -1,17 +1,18 @@
 from urllib.parse import urlparse
 
+from requests.sessions import session
+
 from loguru import logger
 from requests import Session
 
 from ... import tools
-from ..utils import get_html_soup_by_url
+from ..utils import get_html_soup_by_url, parse_iso_8601_time
 
 
 class ReutersParser:
     def __init__(self, requests_session: Session):
         self.requests_session = requests_session
         self.uri = 'https://www.reuters.com/'
-        self.api_url = 'https://wireapi.reuters.com/v3/'
         self.db_table_name = 'reuters_table'
 
     def get_latest_by_tag(self, tag: str):
@@ -52,71 +53,55 @@ class ReutersParser:
         return latest_articles
 
     def get_article(self, uri: str):
+        logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
+
+        url = self.uri + uri
+        print(url)
+        soup = get_html_soup_by_url(self.requests_session, url)
+
         try:
-            logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
-
-            url = self.uri + uri
-            soup = get_html_soup_by_url(self.requests_session, url)
-
-            try:
-                article_title = soup.find(
-                    'h1', {'class': 'ArticleHeader_headline'}).text
-            except:
-                article_title = None
-
-            text_blocks = soup.find(
-                'div', {'class': 'StandardArticleBody_body'}).find_all('p')
-
-            article_main_image = None
-            try:
-                image_container = soup.find(
-                    'div', {'class': 'PrimaryAsset_container'}).find('img')
-                clean_src = image_container.get('src')
-                article_main_image = 'https:' + \
-                    tools.delete_query(clean_src, 'w')
-            except:
-                pass
-
-            try:
-                article_pub_date = soup.find(
-                    'div', {'class': 'ArticleHeader_date'}).text
-            except:
-                article_pub_date = None
-
-            text_blocks_ = []
-
-            for block in text_blocks:
-                if block.get('href'):
-                    continue
-                else:
-                    text_blocks_.append(block.text)
-
-            try:
-                article_text = '\n\n'.join(text_blocks_)
-            except:
-                article_text = None
-
-            article_images = []
-            article_images_blocks = soup.find('div',
-                                              {'class': 'StandardArticleBody_body'}).find_all('div',
-                                                                                              {'class': 'Image_container'})
-            if article_images_blocks:
-                for image_block in article_images_blocks:
-                    image_uri_block = image_block.find('img')
-                    if image_uri_block:
-                        image_data_src = image_uri_block.get('src')
-                        article_images.append(
-                            'https:' + tools.delete_query(image_data_src, 'w'))
-
-            article_body = {'title': article_title,
-                            'source': url,
-                            'source_name': 'Reuters.com',
-                            'publish_date': article_pub_date,
-                            'main_image_link': article_main_image,
-                            'article_images': article_images,
-                            'text': article_text,
-                            'language': 'en'}
-
-            return article_body
+            article_title = soup.find(
+                'meta', {'property': 'og:title'}).get('content')
         except:
-            return None
+            article_title = None
+
+        text_blocks = soup.find(
+            'div', {'class': 'ArticleBodyWrapper'}).find_all('p')
+
+        try:
+            article_main_image = soup.find(
+                'meta', {'property': 'og:image'}).get('content')
+        except:
+            article_main_image = None
+
+        try:
+            article_pub_date = parse_iso_8601_time(soup.find(
+                'meta', {'property': 'og:article:published_time'}).get('content'))
+        except:
+            article_pub_date = None
+
+        text_blocks_ = []
+
+        for block in text_blocks:
+            if block.get('href'):
+                continue
+            else:
+                text_blocks_.append(block.text)
+
+        try:
+            article_text = '\n\n'.join(text_blocks_)
+        except:
+            article_text = None
+
+        article_images = []
+
+        article_body = {'title': article_title,
+                        'source': url,
+                        'source_name': 'Reuters.com',
+                        'publish_date': article_pub_date,
+                        'main_image_link': article_main_image,
+                        'article_images': article_images,
+                        'text': article_text,
+                        'language': 'en'}
+
+        return article_body
