@@ -28,7 +28,7 @@ parsers = {
         'use': True
     },
     'Reuters.com': {
-        'key_words': re.compile(regular_key_words),
+        'key_words': re.compile('.*'),
         'send_key_words': True,
         'use': True
     },
