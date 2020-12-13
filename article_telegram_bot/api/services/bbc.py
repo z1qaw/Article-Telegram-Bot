@@ -57,7 +57,8 @@ class BbcParser:
         soup = get_html_soup_by_url(self.requests_session, url)
 
         try:
-            article_title = soup.find('h1', {'class': 'main-heading'}).text
+            article_title = soup.find(
+                'meta', {'property': 'og:title'}).get('content')
         except:
             article_title = None
         try:
