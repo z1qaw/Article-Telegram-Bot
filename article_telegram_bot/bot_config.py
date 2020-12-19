@@ -6,7 +6,7 @@
 # "bot_token" - Токен для бота. Можно получить в Telegram, создав бота в @BotFather
 import re
 
-bot_token = "1202191308:AAFR1oltwd9QozwXoei25e6xVHU6NuvTPNE"
+bot_token = "1464865396:AAEinCb_7fKgBl9h5SYLSR859NIevNARFlI"
 
 
 # "user_secret" - пароль для добавления текущего пользователя в список получателей.
@@ -16,7 +16,7 @@ user_secret = None
 
 
 # "database_uri" - ссылка на базу данных Heroku Postgres.
-database_url = "postgres://osafddrzqqyzlj:24085bd158ae9e516c622ba36b582f355050a2d1c844d89d6d1cec87ade17a5c@ec2-3-248-4-172.eu-west-1.compute.amazonaws.com:5432/d5nq1armneg9ml"
+database_url = "postgres://ypthpmtwdeankn:9cb0150e60d60a424680096fea2f6e6c6a178678c4178a92cae6aa2aaf44df13@ec2-54-217-204-34.eu-west-1.compute.amazonaws.com:5432/d1n8ob18he4jts"
 
 
 # "key_words" - ключевые слова.
@@ -65,7 +65,7 @@ parsers = {
     'Arabian Business News': {
         'key_words': re.compile('.*'),
         'send_key_words': False,
-        'use': True
+        'use': False
     },
     'Sana News EN': {
         'key_words': re.compile('.*'),
@@ -99,7 +99,7 @@ parsers = {
 # Для перевода требуется API Ключ Yandex. Его можно получить на странице https://translate.yandex.com/developers/keys
 yandex_api_key = 'trnsl.1.1.20180720T160118Z.e4138f77914a269e.d1e1a941a48bd5759f638178ffb2315567621cfb'
 main_language = 'ru'
-translate = True
+translate = False
 
 # "parse_timeout" - переодичность, с которой бот проверяет сайты (в секундах). Рекомендуется указать от 30 секунд.
 parse_timeout = 5

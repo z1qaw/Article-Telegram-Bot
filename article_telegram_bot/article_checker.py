@@ -1,3 +1,4 @@
+from loguru import logger
 import json
 import colorama
 import secrets
@@ -10,7 +11,8 @@ colorama.init()
 
 class Article:
     def __init__(self, article_body):
-        self.id = ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(8))
+        self.id = ''.join(secrets.choice(
+            string.ascii_letters + string.digits) for i in range(8))
         self.article_body = article_body
         self.title = article_body['title']
         self.source = article_body['source']
@@ -26,7 +28,8 @@ class Article:
         self.send_key_words = True
 
     def __str__(self):
-        match_text = '\nMatch:' + ', '.join(self.match_words) if self.match_words else '\nNo matches'
+        match_text = '\nMatch:' + \
+            ', '.join(self.match_words) if self.match_words else '\nNo matches'
         separator = '-' * 30 + '\n'
 
         colored_source_name = {
@@ -56,7 +59,8 @@ class Article:
             match += pattern.findall(self.text.lower())
 
         if match:
-            print('{0} - {1}: Match!!!'.format(self.id, self.source_name))
+            logger.info(
+                '{0} - {1}: Match!!!'.format(self.id, self.source_name))
             self.match_words = tools.delete_duplicates(match)
             return True
         else:

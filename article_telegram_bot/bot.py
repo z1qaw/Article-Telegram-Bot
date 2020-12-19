@@ -38,7 +38,7 @@ class ArticleBot:
             'Bot: {0} - Try to send article to all users...'.format(article.id))
         images_to_send = []
 
-        for image_link in tools.delete_duplicates([article.main_image_link] + article.article_images):
+        for image_link in tools.delete_duplicates([article.main_image_link] + article.article_images)[:7]:
             if image_link:
                 try:
                     try:

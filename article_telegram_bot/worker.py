@@ -55,7 +55,7 @@ class ArticleQueueThread(threading.Thread):
         self.telegram_bot = telegram_bot
         self.parsers_settings = parsers_settings
 
-        print('Queue thread: Initialized')
+        logger.debug('ArticleQueue thread: Initialized')
 
     def append(self, article):
         self.queue.append(article)
@@ -67,7 +67,7 @@ class ArticleQueueThread(threading.Thread):
             return article
 
     def run(self):
-        print('Queue thread: Started')
+        logger.info('ArticleQueue thread: Started')
         while True:
             if len(self.queue) > 0:
                 last_article = self.get()
@@ -93,21 +93,22 @@ class BotPollingThread(threading.Thread):
     def run(self):
         @self.bot.message_handler(commands=['my_id'])
         def send_id(message):
-            print('Bot: Message from {0}: {1}'.format(
+            logger.info('Bot: Message from {0}: {1}'.format(
                 message.chat.id, message.text))
             self.bot.send_message(message.chat.id, str(message.chat.id))
 
         @self.bot.message_handler(commands=['start'])
         def send_start(message):
-            print('Bot: Message from {0}: {1}'.format(
+            logger.info('Bot: Message from {0}: {1}'.format(
                 message.chat.id, message.text))
             text = 'Hello!'
             self.bot.reply_to(message, text)
-            print('Bot: Send text to {0}: {1}'.format(message.chat.id, text))
+            logger.info('Bot: Send text to {0}: {1}'.format(
+                message.chat.id, text))
 
         @self.bot.message_handler(commands=['subscribe'])
         def add_user(message):
-            print('Bot: Message from {0}: {1}'.format(
+            logger.info('Bot: Message from {0}: {1}'.format(
                 message.chat.id, message.text))
             user_id = message.chat.id
             is_password = self.password
@@ -115,14 +116,17 @@ class BotPollingThread(threading.Thread):
                 if not self.database.is_user_exist(user_id):
                     text = 'Теперь вы получатель. Вы будете получать новые статьи в этом чате.'
                     self.database.insert_user_id(user_id)
-                    print('Bot: Insert user {0}'.format(user_id))
-                    print('Bot: Send text to {0}: {1}'.format(user_id, text))
+                    logger.info('Bot: Insert user {0}'.format(user_id))
+                    logger.info(
+                        'Bot: Send text to {0}: {1}'.format(user_id, text))
 
                     self.bot.reply_to(message, text)
                 else:
                     text = 'Вы уже получатель.'
-                    print('Bot: Send text to {0}: {1}'.format(user_id, text))
+                    logger.info(
+                        'Bot: Send text to {0}: {1}'.format(user_id, text))
                     self.bot.reply_to(message, text)
+
             elif self.database.is_user_exist(user_id):
                 self.bot.reply_to(message, 'Вы уже получатель.')
             else:
@@ -130,24 +134,24 @@ class BotPollingThread(threading.Thread):
 
         @self.bot.message_handler(commands=['stop'])
         def delete_user(message):
-            print('Bot: Message from {0}: {1}'.format(
+            logger.info('Bot: Message from {0}: {1}'.format(
                 message.chat.id, message.text))
             user_id = message.chat.id
             if self.database.is_user_exist(user_id):
                 text = 'Теперь вы не будете получать новые статьи. Чтобы снова получать их, снова подпишитесь через команду /subscribe.'
                 self.database.delete_user_id(user_id)
-                print('Bot: Delete user {0}'.format(user_id))
-                print('Bot: Send text to {0}: {1}'.format(user_id, text))
+                logger.info('Bot: Delete user {0}'.format(user_id))
+                logger.info('Bot: Send text to {0}: {1}'.format(user_id, text))
 
                 self.bot.reply_to(message, text)
             else:
                 text = 'Вы не являетесь получателем.'
-                print('Bot: Send text to {0}: {1}'.format(user_id, text))
+                logger.info('Bot: Send text to {0}: {1}'.format(user_id, text))
                 self.bot.reply_to(message, text)
 
         @self.bot.message_handler(func=lambda message: True)
         def echo_all(message):
-            print('Bot: (message_handler) Message from {0}: {1}'.format(
+            logger.info('Bot: (message_handler) Message from {0}: {1}'.format(
                 message.chat.id, message.text))
             if message.text == self.password:
                 if not self.database.is_user_exist(message.chat.id):

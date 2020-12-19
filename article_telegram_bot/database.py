@@ -17,7 +17,12 @@ class Database(threading.Thread):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    "CREATE TABLE IF NOT EXISTS \"{0}\" (uri text)".format(table_name))
+                    f'''CREATE TABLE IF NOT EXISTS \"{table_name}\" (
+                           id SERIAL PRIMARY KEY,
+                           uri text,
+                           add_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                    )'''
+                )
                 break
             except Exception as error:
                 logger.exception(error)
@@ -30,7 +35,8 @@ class Database(threading.Thread):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    "DROP TABLE IF EXISTS {0}".format(table_name))
+                    f'DROP TABLE IF EXISTS {table_name}'
+                )
                 break
             except Exception as error:
                 logger.exception(error)
@@ -43,7 +49,12 @@ class Database(threading.Thread):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    "CREATE TABLE IF NOT EXISTS \"{0}\" (id integer, PRIMARY KEY (id))".format('users'))
+                    """CREATE TABLE IF NOT EXISTS \"users\" (
+                           id SERIAL PRIMARY KEY,
+                           telegram_id integer,
+                           add_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                    )"""
+                )
                 break
             except Exception as error:
                 logger.exception(error)
@@ -57,7 +68,7 @@ class Database(threading.Thread):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    'INSERT INTO {0} (id) VALUES ({1})'.format('users', user_id))
+                    f'INSERT INTO users (telegram_id) VALUES ({user_id})')
                 break
             except Exception as error:
                 logger.exception(error)
@@ -71,7 +82,8 @@ class Database(threading.Thread):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    "SELECT COUNT(*) FROM {0} WHERE id = {1}".format('users', user_id))
+                    f'SELECT COUNT(*) FROM users WHERE telegram_id = {user_id}'
+                )
                 exists = self.cursor.fetchone()
                 is_exists = True if exists[0] else False
                 return is_exists
@@ -87,7 +99,8 @@ class Database(threading.Thread):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    "DELETE FROM {0} WHERE id = {1}".format('users', user_id))
+                    f'DELETE FROM users WHERE telegram_id = {user_id}'
+                )
                 break
             except Exception as error:
                 logger.exception(error)
@@ -100,12 +113,12 @@ class Database(threading.Thread):
         self.check_user_table()
         for i in range(self.max_retry):
             try:
-                self.cursor.execute("SELECT * FROM {0}".format('users'))
+                self.cursor.execute('SELECT * FROM users')
                 data = self.cursor.fetchall()
 
                 ids = []
                 for row in data:
-                    ids.append(row[0])
+                    ids.append(row[1])
                 return ids
             except:
                 time.sleep(0.2)
@@ -113,11 +126,12 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def insert_uri(self, table_name, element):
+    def insert_uri(self, table_name, uri):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    'INSERT INTO {0} (uri) VALUES (\'{1}\')'.format(table_name, element))
+                    f'INSERT INTO {table_name} (uri) VALUES (\'{uri}\')'
+                )
                 break
             except Exception as error:
                 logger.exception(error)
@@ -126,11 +140,12 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def is_exist(self, table_name, element):
+    def is_exist(self, table_name, uri):
         for i in range(self.max_retry):
             try:
                 self.cursor.execute(
-                    "SELECT COUNT(*) FROM {0} WHERE uri = \'{1}\'".format(table_name, element))
+                    f'SELECT COUNT(*) FROM {table_name} WHERE uri = \'{uri}\''
+                )
                 exists = self.cursor.fetchone()
                 is_exists = True if exists[0] else False
                 return is_exists
