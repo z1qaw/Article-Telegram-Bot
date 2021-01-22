@@ -3,7 +3,7 @@ import re
 from loguru import logger
 from requests import Session
 
-from ..utils import get_html_soup_by_url
+from ..utils import get_html_soup_by_url, parse_iso_8601_time
 
 
 class InoSmiParser:
@@ -11,6 +11,7 @@ class InoSmiParser:
         self.requests_session = requests_session
         self.uri = 'https://inosmi.ru'
         self.db_table_name = 'inosmi_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest(self):
         logger.info(f'{self.__class__.__name__}: Get new articles list...')
@@ -57,8 +58,8 @@ class InoSmiParser:
             article_main_image = None
 
         try:
-            article_pub_date = soup.find(
-                'meta', {'property': 'article:published_time'}).get('content')
+            article_pub_date = parse_iso_8601_time(soup.find(
+                'meta', {'property': 'article:published_time'}).get('content'))
         except:
             article_pub_date = None
 

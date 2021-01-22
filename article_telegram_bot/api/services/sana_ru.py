@@ -11,6 +11,7 @@ class RuSanaParser:
         self.requests_session = requests_session
         self.uri = 'http://www.sana.sy/ru'
         self.db_table_name = 'ru_sana_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest_by_tag(self, tag: str):
         logger.debug(

@@ -11,7 +11,8 @@ from . import database as db_api
 from . import worker
 from .api.services import (arabianbusiness, bbc, inosmi, iransegodnya, lenta, nna,
                            reuters, ria, ru_euronews, sana, sana_ru, tourprom,
-                           yenisafak)
+                           yenisafak, arabnews, egyptianstreets, egypttoday, mehrnews,
+                           qatarliving)
 from .bot import ArticleBot
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -59,6 +60,11 @@ def main():
         'Sana News RU': sana_ru.RuSanaParser,
         'NNA News': nna.NnaParser,
         'YeniSafak News': yenisafak.YeniSafakParser,
+        'EgyptianStreets News': egyptianstreets.EgyptianStreetsParser,
+        'QatarLiving News': qatarliving.QatarLivingParser,
+        'MehrNews': mehrnews.MehrNewsParser,
+        'ArabNews': arabnews.ArabNewsParser,
+        'EgyptToday News': egypttoday.EgyptTodayParser
     }
 
     article_queue_thread = worker.ArticleQueueThread(bot, parsers_settings)
@@ -68,10 +74,17 @@ def main():
         if not parsers_settings[key]['use']:
             continue
         parser = parsers_names[key](requests_session)
+        database.checker_tables.append(
+            {
+                'table_name': parser.db_table_name,
+                'normal_overflow_count': parser.database_rows_overflow_count
+            }
+        )
         checker_threads.append(worker.CheckerThread(parser, article_queue_thread, database, parser.db_table_name,
                                                     bot_config.parse_timeout))
         time.sleep(0.5)
 
+    database.start()
     bot_polling_thread.start()
     article_queue_thread.start()
     for checker_thread in checker_threads:

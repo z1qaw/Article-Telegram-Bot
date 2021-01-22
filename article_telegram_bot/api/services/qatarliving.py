@@ -1,38 +1,36 @@
 from urllib.parse import urlparse
 
-from requests.sessions import session
-
 from loguru import logger
 from requests import Session
 
-from ... import tools
 from ..utils import get_html_soup_by_url, parse_iso_8601_time
 
 
-class ReutersParser:
+class QatarLivingParser:
     def __init__(self, requests_session: Session):
         self.requests_session = requests_session
-        self.uri = 'https://www.reuters.com/'
-        self.db_table_name = 'reuters_table'
-        self.database_rows_overflow_count = 350
+        self.uri = 'https://www.qatarliving.com'
+        self.db_table_name = 'qatarliving_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest_by_tag(self, tag: str):
         logger.debug(
             f'{self.__class__.__name__}: Get new articles list by tag {tag}...')
 
-        url = self.uri + tag
+        get_uri = self.uri + tag
 
-        soup = get_html_soup_by_url(self.requests_session, url)
-        article_list = soup.find_all(
-            'article', {'class': 'story'}
-        )
+        soup = get_html_soup_by_url(self.requests_session, get_uri)
+        article_list = soup.find(
+            'div', {'class': 'b-topic-post'}).find_all('div', {'id': 'post-page'})
 
         items = {'tag': tag,
                  'article_list': []}
 
         for item in article_list:
-            article_url = item.find('a').get('href')
-            items['article_list'].append(article_url)
+            item_link = item.find('a', {'class': 'b-topic-post--el-title'})
+            if item_link:
+                updated_link = urlparse(item_link.get('href')).path
+                items['article_list'].append(updated_link)
 
         return items
 
@@ -40,11 +38,11 @@ class ReutersParser:
         logger.info(f'{self.__class__.__name__}: Get new articles list...')
 
         tags = [
-            'world',
-            'world/us-politics'
+            '/forum/news/'
         ]
 
         latest_articles = []
+
         for tag in tags:
             latest_articles += self.get_latest_by_tag(tag)['article_list']
 
@@ -53,17 +51,19 @@ class ReutersParser:
     def get_article(self, uri: str):
         logger.info(f'{self.__class__.__name__}: Get article: ' + uri)
 
-        url = self.uri + uri
-        soup = get_html_soup_by_url(self.requests_session, url)
+        article_uri = self.uri + uri
+        soup = get_html_soup_by_url(self.requests_session, article_uri)
 
         try:
             article_title = soup.find(
                 'meta', {'property': 'og:title'}).get('content')
         except:
             article_title = None
-
-        text_blocks = soup.find(
-            'div', {'class': 'ArticleBodyWrapper'}).find_all('p')
+        try:
+            text_blocks = soup.find(
+                'div', {'class': 'b-post-detail--el-text'}).find_all('p')
+        except:
+            text_blocks = []
 
         try:
             article_main_image = soup.find(
@@ -73,17 +73,14 @@ class ReutersParser:
 
         try:
             article_pub_date = parse_iso_8601_time(soup.find(
-                'meta', {'property': 'og:article:published_time'}).get('content'))
+                'meta', {'name': 'dcterms.date'}).get('content'))
         except:
             article_pub_date = None
 
         text_blocks_ = []
 
         for block in text_blocks:
-            if block.get('href'):
-                continue
-            else:
-                text_blocks_.append(block.text)
+            text_blocks_.append(block.text)
 
         try:
             article_text = '\n\n'.join(text_blocks_)
@@ -91,10 +88,17 @@ class ReutersParser:
             article_text = None
 
         article_images = []
+        article_images_blocks = text_blocks
+        if article_images_blocks:
+            for block in article_images_blocks:
+                image_uri = block.find('img')
+                if image_uri:
+                    image_data_src = image_uri.get('src')
+                    article_images.append(image_data_src)
 
         article_body = {'title': article_title,
-                        'source': url,
-                        'source_name': 'Reuters.com',
+                        'source': article_uri,
+                        'source_name': 'QatarLiving News',
                         'publish_date': article_pub_date,
                         'main_image_link': article_main_image,
                         'article_images': article_images,

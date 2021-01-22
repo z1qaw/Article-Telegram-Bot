@@ -13,7 +13,7 @@ class RuEuronewsParser:
         self.requests_session = requests_session
         self.uri = 'https://ru.euronews.com'
         self.db_table_name = 'ru_euronews_table'
-        self.full_log = True
+        self.database_rows_overflow_count = 300
 
     def get_latest(self):
         logger.info(f'{self.__class__.__name__}: Get new articles list...')

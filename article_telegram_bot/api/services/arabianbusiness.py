@@ -11,6 +11,7 @@ class ArabianBusinessParser:
         self.requests_session = requests_session
         self.uri = 'https://www.arabianbusiness.com'
         self.db_table_name = 'arabianbusiness_table'
+        self.database_rows_overflow_count = 300
         self.request_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0',
             'Upgrade-Insecure-Requests': '1',

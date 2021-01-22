@@ -12,6 +12,7 @@ class NnaParser:
         self.requests_session = requests_session
         self.uri = 'http://nna-leb.gov.lb/en'
         self.db_table_name = 'nna_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest_by_tag(self, tag: str):
         logger.debug(

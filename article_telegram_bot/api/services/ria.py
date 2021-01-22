@@ -10,6 +10,7 @@ class RiaParser:
         self.requests_session = requests_session
         self.uri = 'https://ria.ru'
         self.db_table_name = 'ria_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest_by_tag(self, tag: str):
         logger.debug(

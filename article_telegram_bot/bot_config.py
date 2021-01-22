@@ -92,6 +92,31 @@ parsers = {
         'send_key_words': False,
         'use': True
     },
+    'EgyptianStreets News': {
+        'key_words': re.compile('.*'),
+        'send_key_words': False,
+        'use': True
+    },
+    'QatarLiving News': {
+        'key_words': re.compile('.*'),
+        'send_key_words': False,
+        'use': True
+    },
+    'MehrNews': {
+        'key_words': re.compile('.*'),
+        'send_key_words': False,
+        'use': True
+    },
+    'ArabNews': {
+        'key_words': re.compile('.*'),
+        'send_key_words': False,
+        'use': True
+    },
+    'EgyptToday News': {
+        'key_words': re.compile('.*'),
+        'send_key_words': False,
+        'use': True
+    },
 }
 
 # "main_language" - язык, на который будет переведён текст статьи.

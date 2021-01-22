@@ -6,7 +6,7 @@ import urllib3
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from ..utils import get_html_soup_by_url
+from ..utils import get_html_soup_by_url, parse_iso_8601_time
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -16,6 +16,7 @@ class TourpromParser:
         self.requests_session = requests_session
         self.uri = 'https://www.tourprom.ru'
         self.db_table_name = 'tourprom_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest(self):
         logger.info(f'{self.__class__.__name__}: Get new articles list...')
@@ -101,7 +102,7 @@ class TourpromParser:
             article_body = {'title': article_title,
                             'source': article_uri,
                             'source_name': 'TourProm.ru',
-                            'publish_date': str(datetime.datetime.now()),
+                            'publish_date': parse_iso_8601_time(str(datetime.datetime.now())),
                             'main_image_link': article_main_image,
                             'article_images': [],
                             'text': article_text,

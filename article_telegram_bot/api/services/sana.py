@@ -5,21 +5,22 @@ import requests
 from bs4 import BeautifulSoup
 from loguru import logger
 
+from ..utils import get_html_soup_by_url, parse_iso_8601_time
+
 
 class SanaParser:
     def __init__(self, requests_session: requests.Session):
         self.requests_session = requests_session
         self.uri = 'http://www.sana.sy/en'
         self.db_table_name = 'sana_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest_by_tag(self, tag: str):
         logger.debug(
             f'{self.__class__.__name__}: Get new articles list by tag {tag}...')
-        get_uri = self.uri + tag
 
-        answer = self.requests_session.get(get_uri)
-        answer_html = answer.content.decode()
-        soup = BeautifulSoup(answer_html, "html.parser")
+        get_uri = self.uri + tag
+        soup = get_html_soup_by_url(self.requests_session, get_uri)
         article_list = soup.find_all('li', {'class': 'timeline-post'})
 
         items = {'tag': tag,

@@ -4,20 +4,23 @@ import requests
 from bs4 import BeautifulSoup
 from loguru import logger
 
+from ..utils import get_html_soup_by_url, parse_iso_8601_time
+
 
 class YeniSafakParser:
     def __init__(self, requests_session: requests.Session):
         self.requests_session = requests_session
         self.uri = 'https://www.yenisafak.com'
         self.db_table_name = 'yenisafak_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest_by_tag(self, tag: str):
+        logger.debug(
+            f'{self.__class__.__name__}: Get new articles list by tag {tag}...')
         get_uri = self.uri + '/en/' + tag
-
-        answer = self.requests_session.get(get_uri)
-        answer_html = answer.content.decode()
-        soup = BeautifulSoup(answer_html, "html.parser")
-        article_list = soup.find('div', {'class': 'list-news'}).find_all('article')
+        soup = get_html_soup_by_url(self.requests_session, get_uri)
+        article_list = soup.find(
+            'div', {'class': 'list-news'}).find_all('article')
 
         items = {'tag': tag,
                  'article_list': []}
@@ -60,17 +63,20 @@ class YeniSafakParser:
         except:
             article_title = None
         try:
-            text_blocks = soup.find('article', {'class': re.compile('main')}).find_all('p')
+            text_blocks = soup.find(
+                'article', {'class': re.compile('main')}).find_all('p')
         except:
             text_blocks = []
 
         try:
-            article_main_image = soup.find('meta', {'property': 'og:image'}).get('content')
+            article_main_image = soup.find(
+                'meta', {'property': 'og:image'}).get('content')
         except:
             article_main_image = None
 
         try:
-            article_pub_date = soup.find('div', {'class': re.compile('info')}).find('time').text
+            article_pub_date = soup.find(
+                'div', {'class': re.compile('info')}).find('time').text
         except:
             article_pub_date = None
 

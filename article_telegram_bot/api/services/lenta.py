@@ -13,6 +13,7 @@ class LentaParser:
         self.requests_session = requests_session
         self.uri = 'https://lenta.ru'
         self.db_table_name = 'lenta_table'
+        self.database_rows_overflow_count = 300
 
     def get_latest(self):
         logger.info(f'{self.__class__.__name__}: Get new articles list...')
