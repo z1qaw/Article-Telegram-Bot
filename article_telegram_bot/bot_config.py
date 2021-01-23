@@ -6,7 +6,7 @@
 # "bot_token" - Токен для бота. Можно получить в Telegram, создав бота в @BotFather
 import re
 
-bot_token = "1464865396:AAEinCb_7fKgBl9h5SYLSR859NIevNARFlI"
+bot_token = "1202191308:AAE8hzQaVywPTCRmdDvEraePPPMh_DB5boI"
 
 
 # "user_secret" - пароль для добавления текущего пользователя в список получателей.
