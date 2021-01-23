@@ -1,12 +1,11 @@
-from loguru import logger
 import json
-import colorama
+import re
 import secrets
 import string
 
-from . import tools
+from loguru import logger
 
-colorama.init()
+from . import tools
 
 
 class Article:
@@ -20,7 +19,7 @@ class Article:
         self.publish_date = article_body['publish_date']
         self.main_image_link = article_body['main_image_link']
         self.article_images = article_body['article_images']
-        self.text = article_body['text']
+        self.text = self.text_format_middleware(article_body['text'])
         self.match_words = []
         self.new = 0
         self.match = 0
@@ -32,17 +31,7 @@ class Article:
             ', '.join(self.match_words) if self.match_words else '\nNo matches'
         separator = '-' * 30 + '\n'
 
-        colored_source_name = {
-            'Reuters.com': colorama.Back.RED + colorama.Fore.WHITE + 'Reuters.com' + colorama.Style.RESET_ALL,
-            'BBC News': colorama.Back.RED + colorama.Fore.WHITE + 'BBC News' + colorama.Style.RESET_ALL,
-            'Lenta.Ru': colorama.Back.MAGENTA + colorama.Fore.WHITE + 'Lenta.Ru' + colorama.Style.RESET_ALL,
-            'РИА Новости': colorama.Back.BLUE + colorama.Fore.WHITE + 'РИА Новости' + colorama.Style.RESET_ALL
-        }
-
-        this_source_name = colored_source_name[
-            self.source_name] if self.source_name in colored_source_name else self.source_name
-
-        return '{6} - {5}{0} - {1} - {2} - {3}{4}\n'.format(this_source_name,
+        return '{6} - {5}{0} - {1} - {2} - {3}{4}\n'.format(self.source_name,
                                                             self.publish_date,
                                                             self.title,
                                                             self.source,
@@ -71,3 +60,13 @@ class Article:
 
     def get_article_body_json(self):
         return json.dumps(self.article_body, ensure_ascii=False)
+
+    def text_format_middleware(self, raw_text: str):
+        middlewares = [
+            lambda text: re.sub('\n{3}', '\n\n', text),
+            lambda text: text.strip()
+        ]
+        for middleware in middlewares:
+            raw_text = middleware(raw_text)
+
+        return raw_text
