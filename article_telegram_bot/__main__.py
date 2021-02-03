@@ -31,7 +31,7 @@ def main():
     bot_token = bot_config.bot_token
     database = db_api.Database(bot_config.database_url)
 
-    yandex_translater = YandexTranslate(bot_config.yandex_api_key)
+    yandex_translater = YandexTranslate(bot_config.yandex_api_key or 'EMPTY')
 
     translate = {
         'to': bot_config.main_language,
