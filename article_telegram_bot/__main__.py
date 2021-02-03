@@ -81,7 +81,7 @@ def main():
             }
         )
         checker_threads.append(worker.CheckerThread(parser, article_queue_thread, database, parser.db_table_name,
-                                                    bot_config.parse_timeout))
+                                                    bot_config.parse_interval))
         time.sleep(0.5)
 
     database.start()

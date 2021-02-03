@@ -1,0 +1,32 @@
+{
+    "name": "Article Telegram Bot",
+    "description": "Бот-агрегатор для новостей по ключевым словам.",
+    "repository": "https://github.com/s1q/Article-Telegram-Bot",
+    "env": {
+        "TELEGRAM_BOT_TOKEN": {
+            "description": "Токен Telegram-бота. Можно получить через @botfather"
+        },
+        "SUBSCRIBE_SECRET": {
+            "description": "Пароль для подписки на новости. Оставьте поле пустым, чтобы подписываться без пароля командой /subscribe.",
+            "required": false
+        },
+        "REGULAR_KEYWORDS": {
+            "description": "Ключевые слова для фильтра новостей.",
+            "value": "азербайджан|\\bбахрейн|\\bегипет|\\bегипт|\\bизраил|\\bиордани|\\bирак|\\bиран|\\bйемен|\\bкатар|\\bкипр|\\bкувейт|\\bливан|арабски\\w+ эмират\\w+|\\bоаэ|\\bоман|\\bпалестин|\\bсаудовск\\w+ арави\\w+|\\bсири\\w+|\\bтурци+|\\bazerbaijan|armenia|bahrain|egypt|georgia|israel|jordan|iraq|\\biran|yemen|qatar|cyprus|kuwait|lebanon|united arab emirates|UAE|\\boman|palestine|saudi arabia|syria|turkey"
+        },
+        "PARSE_INTERVAL": {
+            "description": "Периодичность в секундах, с которой бот будет проверять новые новости (в секундах). Рекомендуется ставить от 30 секунд.",
+            "value": 30
+        },
+        "YANDEX_TRANSLATE_API_KEY": {
+            "description": "Оставить поле пустым. Яндекс-перевод больше не работает как API.",
+            "required": false
+        }
+    },
+    "addons": [
+        {
+            "plan": "heroku-postgresql:hobby-dev"
+        }
+    ]
+  }
+  

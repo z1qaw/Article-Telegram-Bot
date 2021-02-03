@@ -7,6 +7,11 @@
 
 ## 2. Деплой Heroku
 
+Просто нажмите на кнопку:  
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+Или:
+
 1. Заходим на https://www.heroku.com/, регистрируем новый аккаунт (Кнопка `Sign Up`).
 2. В графе `Role` выбираем `Hobbyist`, в графе `Primary development language` выбираем `Python`.
 3. Подтверждаем почту, создаём пароль для аккаунта.

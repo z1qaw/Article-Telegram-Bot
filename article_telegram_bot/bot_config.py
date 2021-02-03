@@ -5,22 +5,24 @@
 
 # "bot_token" - Токен для бота. Можно получить в Telegram, создав бота в @BotFather
 import re
+import os
 
-bot_token = "1202191308:AAE8hzQaVywPTCRmdDvEraePPPMh_DB5boI"
+
+bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
 
 
 # "user_secret" - пароль для добавления текущего пользователя в список получателей.
 # Отправьте его боту, чтобы добавить текущего пользователя.
 # Поставьте значение None, чтобы выключить защиту и включить команду /subscribe
-user_secret = None
+user_secret = os.environ.get('SUBSCRIBE_SECRET')
 
 
 # "database_uri" - ссылка на базу данных Heroku Postgres.
-database_url = "postgres://ypthpmtwdeankn:9cb0150e60d60a424680096fea2f6e6c6a178678c4178a92cae6aa2aaf44df13@ec2-54-217-204-34.eu-west-1.compute.amazonaws.com:5432/d1n8ob18he4jts"
-
+# database_url = "postgres://ypthpmtwdeankn:9cb0150e60d60a424680096fea2f6e6c6a178678c4178a92cae6aa2aaf44df13@ec2-54-217-204-34.eu-west-1.compute.amazonaws.com:5432/d1n8ob18he4jts"
+database_url = os.environ.get('DATABASE_URL')
 
 # "key_words" - ключевые слова.
-regular_key_words = r'азербайджан|\bбахрейн|\bегипет|\bегипт|\bизраил|\bиордани|\bирак|\bиран|\bйемен|\bкатар|\bкипр|\bкувейт|\bливан|арабски\w+ эмират\w+|\bоаэ|\bоман|\bпалестин|\bсаудовск\w+ арави\w+|\bсири\w+|\bтурци+|\bazerbaijan|armenia|bahrain|egypt|georgia|israel|jordan|iraq|\biran|yemen|qatar|cyprus|kuwait|lebanon|united arab emirates|UAE|\boman|palestine|saudi arabia|syria|turkey'
+regular_key_words = os.environ.get('REGULAR_KEYWORDS')
 parsers = {
     'РИА Новости': {
         'key_words': re.compile(regular_key_words),
@@ -122,12 +124,12 @@ parsers = {
 # "main_language" - язык, на который будет переведён текст статьи.
 # "translate" - переводить ли статьи на язык "main_language". True или False.
 # Для перевода требуется API Ключ Yandex. Его можно получить на странице https://translate.yandex.com/developers/keys
-yandex_api_key = 'trnsl.1.1.20180720T160118Z.e4138f77914a269e.d1e1a941a48bd5759f638178ffb2315567621cfb'
+yandex_api_key = os.environ.get('YANDEX_TRANSLATE_API_KEY')
 main_language = 'ru'
 translate = False
 
-# "parse_timeout" - переодичность, с которой бот проверяет сайты (в секундах). Рекомендуется указать от 30 секунд.
-parse_timeout = 5
+# "parse_interval" - переодичность, с которой бот проверяет сайты (в секундах). Рекомендуется указать от 30 секунд.
+parse_interval = int(os.environ.get('PARSE_INTERVAL'))
 
 # "use_proxy" - использовать ли прокси для обхода блокировки Telegram в РФ (имеет только 2 значения: True - да, или False - нет).
 # Рекомендуется использовать Tor Bundle proxy как бесплатный, стабильный и наиболее безопасный вариант.
