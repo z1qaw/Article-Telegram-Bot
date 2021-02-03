@@ -129,7 +129,7 @@ main_language = 'ru'
 translate = False
 
 # "parse_interval" - переодичность, с которой бот проверяет сайты (в секундах). Рекомендуется указать от 30 секунд.
-parse_interval = int(os.environ.get('PARSE_INTERVAL'))
+parse_interval = 30
 
 # "use_proxy" - использовать ли прокси для обхода блокировки Telegram в РФ (имеет только 2 значения: True - да, или False - нет).
 # Рекомендуется использовать Tor Bundle proxy как бесплатный, стабильный и наиболее безопасный вариант.
