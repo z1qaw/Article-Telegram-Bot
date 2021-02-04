@@ -10,7 +10,7 @@ pip-tools==5.3.1
 psycopg2-binary==2.8.6
 pycodestyle==2.6.0
 pyTelegramBotAPI==3.7.3
-requests==2.25.0
+requests==2.25.1
 six==1.15.0
 soupsieve==1.9.4
 toml==0.10.2
