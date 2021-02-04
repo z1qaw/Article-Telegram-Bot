@@ -1,4 +1,3 @@
-from re import L
 import psycopg2
 import time
 import threading

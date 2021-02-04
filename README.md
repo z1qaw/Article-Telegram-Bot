@@ -7,7 +7,8 @@
 
 ## 2. Деплой Heroku
 
-Просто нажмите на кнопку:  
+Просто нажмите на кнопку:
+
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 Или:

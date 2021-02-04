@@ -102,7 +102,7 @@ class TourpromParser:
             article_body = {'title': article_title,
                             'source': article_uri,
                             'source_name': 'TourProm.ru',
-                            'publish_date': parse_iso_8601_time(str(datetime.datetime.now())),
+                            'publish_date': str(datetime.datetime.now()),
                             'main_image_link': article_main_image,
                             'article_images': [],
                             'text': article_text,

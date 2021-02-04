@@ -2,7 +2,6 @@ import json
 import re
 import secrets
 import string
-from urllib.parse import quote_plus
 
 from loguru import logger
 

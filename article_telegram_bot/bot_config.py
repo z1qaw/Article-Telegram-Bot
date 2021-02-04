@@ -18,7 +18,6 @@ user_secret = os.environ.get('SUBSCRIBE_SECRET')
 
 
 # "database_uri" - ссылка на базу данных Heroku Postgres.
-# database_url = "postgres://ypthpmtwdeankn:9cb0150e60d60a424680096fea2f6e6c6a178678c4178a92cae6aa2aaf44df13@ec2-54-217-204-34.eu-west-1.compute.amazonaws.com:5432/d1n8ob18he4jts"
 database_url = os.environ.get('DATABASE_URL')
 
 # "key_words" - ключевые слова.

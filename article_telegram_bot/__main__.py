@@ -82,20 +82,17 @@ def main():
         )
         checker_threads.append(worker.CheckerThread(parser, article_queue_thread, database, parser.db_table_name,
                                                     bot_config.parse_interval))
-        time.sleep(0.5)
 
     database.start()
     bot_polling_thread.start()
     article_queue_thread.start()
     for checker_thread in checker_threads:
         checker_thread.start()
-        time.sleep(0.5)
 
     bot_polling_thread.join()
     article_queue_thread.join()
     for checker_thread in checker_threads:
         checker_thread.join()
-        time.sleep(0.5)
 
     logger.info('All threads has been initialized')
 
