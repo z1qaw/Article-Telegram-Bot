@@ -6,7 +6,7 @@ click==7.1.2
 cssutils==1.0.2
 idna==2.8
 loguru==0.5.3
-pip-tools==5.3.1
+pip-tools==5.5.0
 psycopg2-binary==2.8.6
 pycodestyle==2.6.0
 pyTelegramBotAPI==3.7.3
