@@ -21,7 +21,7 @@ user_secret = os.environ.get('SUBSCRIBE_SECRET')
 database_url = os.environ.get('DATABASE_URL')
 
 # "key_words" - ключевые слова.
-regular_key_words = os.environ.get('REGULAR_KEYWORDS')
+regular_key_words = os.environ.get('REGULAR_KEYWORDS', '.*')
 parsers = {
     'РИА Новости': {
         'key_words': re.compile(regular_key_words),
@@ -124,17 +124,17 @@ parsers = {
 # "translate" - переводить ли статьи на язык "main_language". True или False.
 # Для перевода требуется API Ключ Yandex. Его можно получить на странице https://translate.yandex.com/developers/keys
 yandex_api_key = os.environ.get('YANDEX_TRANSLATE_API_KEY')
-main_language = 'ru'
-translate = False
+main_language = str(os.environ.get('ATB_DEFAULT_LANGUAGE', 'ru'))
+translate = bool(os.environ.get('ATB_DO_TRANSLATE', False))
 
 # "parse_interval" - переодичность, с которой бот проверяет сайты (в секундах). Рекомендуется указать от 30 секунд.
-parse_interval = 30
+parse_interval = int(os.environ.get('ATB_PARSE_INTERVAL', 30))
 
 # "use_proxy" - использовать ли прокси для обхода блокировки Telegram в РФ (имеет только 2 значения: True - да, или False - нет).
 # Рекомендуется использовать Tor Bundle proxy как бесплатный, стабильный и наиболее безопасный вариант.
 # "proxies" преднастроена для использования Tor Bundle proxy.
 # Heroku не требует прокси (пока что), поэтому при деплое на Heroku ставим False, иначе бот не запустится.
-use_proxy = False
+use_proxy = os.environ.get('USE_PROXY', False)
 proxies = {
-    "https": "socks5://127.0.0.1:9050"
+    'https': os.environ.get('ATB_PROXY', 'socks5://127.0.0.1:9050')
 }

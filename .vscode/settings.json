@@ -2,5 +2,5 @@
     "files.autoSave": "onFocusChange",
     "python.languageServer": "Pylance",
     "python.formatting.provider": "autopep8",
-    "python.pythonPath": "venv/bin/python3"
+    "python.pythonPath": "/home/user/.local/share/virtualenvs/Article-Telegram-Bot-v35nHzbQ/bin/python3.9"
 }
