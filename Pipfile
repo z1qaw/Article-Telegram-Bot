@@ -7,10 +7,10 @@ name = "pypi"
 requests = "*"
 beautifulsoup4 = "*"
 loguru = "*"
-yandex-translate = "*"
 psycopg2-binary = "*"
 cssutils = "*"
 pytelegrambotapi = "*"
+"yandex.translate" = "*"
 
 [dev-packages]
 
