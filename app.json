@@ -19,6 +19,6 @@
             "required": false
         }
     },
-    "addons": ["heroku-postgresql:hobby-dev"]
+    "addons": ["heroku-postgresql:hobby-dev", "logentries:le_tryit"]
   }
   
