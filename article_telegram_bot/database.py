@@ -1,11 +1,13 @@
-import psycopg2
-import time
 import threading
+import time
+from typing import List, Union
+
+import psycopg2
 from loguru import logger
 
 
 class Database(threading.Thread):
-    def __init__(self, path, retry=True, max_retry=10):
+    def __init__(self, path: str, retry: bool = True, max_retry: int = 10) -> None:
         super(Database, self).__init__()
         self.setDaemon(True)
 
@@ -14,10 +16,10 @@ class Database(threading.Thread):
         self.cursor = self.connection.cursor()
         self.retry = retry
         self.max_retry = max_retry
-        self.tables_overflow_check_time = 5*60
+        self.tables_overflow_check_time = 5 * 60
         self.checker_tables = []
 
-    def check_table(self, table_name):
+    def check_table(self, table_name: str) -> None:
         for i in range(self.max_retry):
             try:
                 with self.connection.cursor() as cursor:
@@ -36,7 +38,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def delete_table(self, table_name):
+    def delete_table(self, table_name: str) -> None:
         for i in range(self.max_retry):
             try:
                 with self.connection.cursor() as cursor:
@@ -51,7 +53,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def check_user_table(self):
+    def check_user_table(self) -> None:
         for i in range(self.max_retry):
             try:
                 with self.connection.cursor() as cursor:
@@ -70,7 +72,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def insert_user_id(self, user_id):
+    def insert_user_id(self, user_id: Union[str, int]) -> None:
         self.check_user_table()
         for i in range(self.max_retry):
             try:
@@ -85,7 +87,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def get_total_rows_count(self):
+    def get_total_rows_count(self) -> Union[list, None]:
         for i in range(self.max_retry):
             try:
                 with self.connection.cursor() as cursor:
@@ -100,7 +102,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def is_user_exist(self, user_id):
+    def is_user_exist(self, user_id: Union[str, int]) -> Union[bool, None]:
         self.check_user_table()
         for i in range(self.max_retry):
             try:
@@ -118,7 +120,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def delete_user_id(self, user_id):
+    def delete_user_id(self, user_id: Union[str, int]) -> None:
         self.check_user_table()
         for i in range(self.max_retry):
             try:
@@ -134,7 +136,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def get_users_list(self):
+    def get_users_list(self) -> Union[List[str], None]:
         self.check_user_table()
         for i in range(self.max_retry):
             try:
@@ -152,7 +154,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def insert_uri(self, table_name, uri):
+    def insert_uri(self, table_name: str, uri: str) -> None:
         for i in range(self.max_retry):
             try:
                 with self.connection.cursor() as cursor:
@@ -167,7 +169,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def is_exist(self, table_name, uri):
+    def is_exist(self, table_name: str, uri: str) -> Union[bool, None]:
         for i in range(self.max_retry):
             try:
                 with self.connection.cursor() as cursor:
@@ -183,7 +185,7 @@ class Database(threading.Thread):
             if not self.retry:
                 break
 
-    def run(self):
+    def run(self) -> None:
         while True:
             for table in self.checker_tables:
                 limit = table['normal_overflow_count']
@@ -199,7 +201,9 @@ class Database(threading.Thread):
                     deleted_rows_count = cursor.rowcount
                     time.sleep(1)
                     logger.info(
-                        f'Clear rows in table {table_name} except of {limit} last rows. {deleted_rows_count} deleted.')
+                        f'{self.__class__.__name__}: Clear rows in table {table_name} '
+                        f'except of {limit} last rows. {deleted_rows_count} deleted.')
                     total_rows_count = int(self.get_total_rows_count()[0])
-                    logger.info(f'Total rows count: {total_rows_count}')
+                    logger.info(
+                        f'{self.__class__.__name__}: Total rows count: {total_rows_count}')
             time.sleep(self.tables_overflow_check_time)

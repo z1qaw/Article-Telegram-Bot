@@ -42,7 +42,8 @@ def main():
     requests_session = requests.session()
     bot = ArticleBot(bot_token, database, requests_session, translate)
     bot_polling_thread = worker.BotPollingThread(
-        bot, database, bot_config.user_secret)
+        bot, database, bot_config.user_secret
+    )
 
     parsers_settings = bot_config.parsers
     parsers_names = {

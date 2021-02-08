@@ -1,4 +1,3 @@
-import json
 import re
 import secrets
 import string
@@ -9,7 +8,7 @@ from . import tools
 
 
 class Article:
-    def __init__(self, article_body):
+    def __init__(self, article_body: dict) -> None:
         self.id = ''.join(secrets.choice(
             string.ascii_letters + string.digits) for i in range(8))
         self.article_body = article_body
@@ -26,20 +25,22 @@ class Article:
         self.language = article_body['language']
         self.send_key_words = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         match_text = '\nMatch:' + \
             ', '.join(self.match_words) if self.match_words else '\nNo matches'
         separator = '-' * 30 + '\n'
 
-        return '{6} - {5}{0} - {1} - {2} - {3}{4}\n'.format(self.source_name,
-                                                            self.publish_date,
-                                                            self.title,
-                                                            self.source,
-                                                            match_text,
-                                                            separator,
-                                                            self.id)
+        return f'{6} - {5}{0} - {1} - {2} - {3}{4}\n'.format(
+            self.source_name,
+            self.publish_date,
+            self.title,
+            self.source,
+            match_text,
+            separator,
+            self.id
+        )
 
-    def check_for_match(self, pattern):
+    def check_for_match(self, pattern: re.Pattern) -> bool:
         match = []
         if self.title:
             match += pattern.findall(self.title.lower())
@@ -55,13 +56,7 @@ class Article:
         else:
             return False
 
-    def get_article_body(self):
-        return self.article_body
-
-    def get_article_body_json(self):
-        return json.dumps(self.article_body, ensure_ascii=False)
-
-    def text_format_middleware(self, raw_text: str):
+    def text_format_middleware(self, raw_text: str) -> str:
         middlewares = [
             lambda text: re.sub('\n{3}', '\n\n', text),
             lambda text: text.strip()

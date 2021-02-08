@@ -1,17 +1,14 @@
-import time
-
-import requests
-import telebot
-
-from . import tools
-from . import bot_config
-
-from telebot import apihelper
-from io import BytesIO
-from telebot.types import InputMediaPhoto
 import urllib.parse
 
+import telebot
 from loguru import logger
+from requests import Session
+from telebot import apihelper
+from telebot.types import InputMediaPhoto
+
+from . import bot_config, tools
+from .article_checker import Article
+from .database import Database
 
 if bot_config.use_proxy:
     logger.info('Bot use proxy.')
@@ -19,7 +16,7 @@ if bot_config.use_proxy:
 
 
 class ArticleBot:
-    def __init__(self, token, database, requests_session, translate):
+    def __init__(self, token: str, database: Database, requests_session: Session, translate: dict) -> None:
         self.bot = telebot.TeleBot(token)
         self.requests_session = requests_session
         self.translate = translate['translate']
@@ -28,11 +25,10 @@ class ArticleBot:
         self.translate_links = translate['translate_links']
         self.database = database
 
-    def send_article(self, article):
+    def send_article(self, article: Article) -> int:
         current_users = self.database.get_users_list()
         if not current_users:
             return 1
-        logger.info(current_users)
 
         logger.info(
             'Bot: {0} - Try to send article to all users...'.format(article.id))
@@ -40,39 +36,29 @@ class ArticleBot:
 
         for image_link in tools.delete_duplicates([article.main_image_link] + article.article_images)[:7]:
             if image_link:
-                try:
-                    try:
-                        response = self.requests_session.get(image_link)
-                    except requests.exceptions.SSLError:
-                        response = self.requests_session.get(
-                            image_link, verify=False)
-                    if response.status_code == 200:
-                        if len(response.content) > 0:
-                            img_bytes = BytesIO(response.content)
-                            images_to_send.append(InputMediaPhoto(img_bytes))
-                except Exception as error:
-                    logger.exception(error)
-                time.sleep(0.2)
+                images_to_send.append(InputMediaPhoto(image_link))
 
-        translated = {'article_title': None,
-                      'article_text': None}
+        translated = {
+            'article_title': None,
+            'article_text': None
+        }
 
         if (article.text or article.title) and (article.language != self.translate_language) and self.translate:
             if article.title:
                 try:
-                    translated['article_title'] = self.translator.translate(article.title,
-                                                                            '-'.join([article.language,
-                                                                                      self.translate_language]))[
-                        'text'][0]
+                    translated['article_title'] = self.translator.translate(
+                        article.title,
+                        '-'.join([article.language, self.translate_language]))['text'][0]
                 except Exception as error:
                     logger.warning(
                         'Can"t translate text using Yandex.Translate')
             if article.text:
                 try:
-                    translated['article_text'] = self.translator.translate(article.text,
-                                                                           '-'.join([article.language,
-                                                                                     self.translate_language]))['text'][
-                        0]
+                    translated['article_text'] = self.translator.translate(
+                        article.text,
+                        '-'.join(
+                            [article.language, self.translate_language])
+                    )['text'][0]
                 except Exception as error:
                     logger.warning(
                         'Can"t translate text using Yandex.Translate')
@@ -84,18 +70,20 @@ class ArticleBot:
             article_title = translated['article_title'] if translated['article_title'] else article.title
             article_text = translated['article_text'] if translated['article_text'] else article.text
 
-        text = 'Источник: {2} {3}\n\nДата публикации: {1}\n\n{0}\n\n{4}'.format(article_title,
-                                                                                article.publish_date,
-                                                                                article.source_name,
-                                                                                article.source,
-                                                                                article_text)
+        text = 'Источник: {2} {3}\n\nДата публикации: {1}\n\n{0}\n\n{4}'.format(
+            article_title,
+            article.publish_date,
+            article.source_name,
+            article.source,
+            article_text
+        )
 
         translate_link = 'https://translate.google.com/?source=gtx_c#view=home&op=translate&sl={0}&tl={1}&text={2}'.format(
-            article.language, self.translate_language, urllib.parse.quote(
-                article.source)
+            article.language,
+            self.translate_language,
+            urllib.parse.quote(article.source)
         )
-        translate_link_text = '[Перевод статьи на Google Translate]({0})'.format(
-            translate_link)
+        translate_link_text = f'[Перевод статьи на Google Translate]({translate_link})'
 
         re_text = 'Ключевые слова:\n' + \
             (', '.join(article.match_words)
@@ -138,8 +126,11 @@ class ArticleBot:
                     try:
                         logger.info(
                             'Bot: User {0} - {1} - Try to send text message part...'.format(str(user_id), article.id))
-                        self.bot.send_message(user_id, text[x:x + 4096],
-                                              disable_web_page_preview=True)
+                        self.bot.send_message(
+                            user_id,
+                            text[x:x + 4096],
+                            disable_web_page_preview=True
+                        )
                         logger.info(
                             'Bot: User {0} - {1} - Message part sented'.format(str(user_id), article.id))
                     except Exception as error:
@@ -175,10 +166,13 @@ class ArticleBot:
                 try:
                     logger.info(
                         'Bot: User {0} - {1} - Try to send photos'.format(str(user_id), article.id))
-                    self.bot.send_media_group(user_id,
-                                              [InputMediaPhoto(
-                                                  image.photo[0].file_id) for image in message_to_forward])
+                    self.bot.send_media_group(
+                        user_id,
+                        [InputMediaPhoto(image.photo[0].file_id)
+                         for image in message_to_forward]
+                    )
                     logger.info(
                         'Bot: User {0} - {1} - Photos sented'.format(str(user_id), article.id))
                 except Exception as error:
                     logger.exception(error)
+        return 0

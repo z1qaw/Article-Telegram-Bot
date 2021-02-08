@@ -3,25 +3,26 @@
 Заполните поля ниже перед тем, как запускать бота через main.py!
 """
 
-# "bot_token" - Токен для бота. Можно получить в Telegram, создав бота в @BotFather
 import re
-import os
+
+from .tools import get_env_var
 
 
-bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+# "bot_token" - Токен для бота. Можно получить в Telegram, создав бота в @BotFather
+bot_token = get_env_var('TELEGRAM_BOT_TOKEN', required=True)
 
 
 # "user_secret" - пароль для добавления текущего пользователя в список получателей.
 # Отправьте его боту, чтобы добавить текущего пользователя.
 # Поставьте значение None, чтобы выключить защиту и включить команду /subscribe
-user_secret = os.environ.get('SUBSCRIBE_SECRET')
+user_secret = get_env_var('SUBSCRIBE_SECRET')
 
 
 # "database_uri" - ссылка на базу данных Heroku Postgres.
-database_url = os.environ.get('DATABASE_URL')
+database_url = get_env_var('DATABASE_URL', required=True)
 
 # "key_words" - ключевые слова.
-regular_key_words = os.environ.get('REGULAR_KEYWORDS', '.*')
+regular_key_words = get_env_var('REGULAR_KEYWORDS', default='.*')
 parsers = {
     'РИА Новости': {
         'key_words': re.compile(regular_key_words),
@@ -123,18 +124,18 @@ parsers = {
 # "main_language" - язык, на который будет переведён текст статьи.
 # "translate" - переводить ли статьи на язык "main_language". True или False.
 # Для перевода требуется API Ключ Yandex. Его можно получить на странице https://translate.yandex.com/developers/keys
-yandex_api_key = os.environ.get('YANDEX_TRANSLATE_API_KEY')
-main_language = str(os.environ.get('ATB_DEFAULT_LANGUAGE', 'ru'))
-translate = bool(os.environ.get('ATB_DO_TRANSLATE', False))
+yandex_api_key = get_env_var('YANDEX_TRANSLATE_API_KEY', default='EMPTY')
+main_language = str(get_env_var('ATB_DEFAULT_LANGUAGE', default='ru'))
+translate = bool(get_env_var('ATB_DO_TRANSLATE', default=False))
 
 # "parse_interval" - переодичность, с которой бот проверяет сайты (в секундах). Рекомендуется указать от 30 секунд.
-parse_interval = int(os.environ.get('ATB_PARSE_INTERVAL', 30))
+parse_interval = int(get_env_var('ATB_PARSE_INTERVAL', default=30))
 
 # "use_proxy" - использовать ли прокси для обхода блокировки Telegram в РФ (имеет только 2 значения: True - да, или False - нет).
 # Рекомендуется использовать Tor Bundle proxy как бесплатный, стабильный и наиболее безопасный вариант.
 # "proxies" преднастроена для использования Tor Bundle proxy.
 # Heroku не требует прокси (пока что), поэтому при деплое на Heroku ставим False, иначе бот не запустится.
-use_proxy = os.environ.get('USE_PROXY', False)
+use_proxy = get_env_var('USE_PROXY', default=False)
 proxies = {
-    'https': os.environ.get('ATB_PROXY', 'socks5://127.0.0.1:9050')
+    'https': get_env_var('ATB_PROXY', default='socks5://127.0.0.1:9050')
 }
