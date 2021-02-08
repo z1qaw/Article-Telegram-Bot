@@ -21,7 +21,7 @@ def main():
     """ App Entry point"""
     logger.remove()
     logger.add(
-        sys.stderr, format="{time} [{level}] {message}", level="INFO", colorize=True)
+        sys.stderr, format=bot_config.logging_format, level=bot_config.logging_format, colorize=True)
 
     logger.info('-' * 20)
     logger.info('Article Telegram Bot [HEROKU EDITION]', '\n')

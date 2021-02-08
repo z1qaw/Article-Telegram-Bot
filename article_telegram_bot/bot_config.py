@@ -139,3 +139,6 @@ use_proxy = get_env_var('USE_PROXY', default=False)
 proxies = {
     'https': get_env_var('ATB_PROXY', default='socks5://127.0.0.1:9050')
 }
+
+logging_format = get_env_var('LOGGING_FORMAT', default='{time} [{level}] {message}')
+logging_level = get_env_var('LOGGING_LEVEL', default='INFO')
