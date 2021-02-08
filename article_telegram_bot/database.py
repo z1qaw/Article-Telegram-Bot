@@ -10,10 +10,9 @@ def retry_on_error(f):
     def wrapper(*args):
         db_instanse = args[0]
 
-        for i in range(db_instanse.max_retry):
+        for _ in range(db_instanse.max_retry):
             try:
-                f(*args)
-                break
+                return f(*args)
             except Exception as error:
                 logger.exception(error)
                 time.sleep(0.3)
