@@ -11,10 +11,10 @@ psycopg2-binary = "*"
 cssutils = "*"
 pytelegrambotapi = "*"
 "yandex.translate" = "*"
-ipython = "*"
 
 [dev-packages]
 autopep8 = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.9"
