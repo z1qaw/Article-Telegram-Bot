@@ -29,7 +29,7 @@ class ArticleBot:
         logger.debug(
             'Bot: User {0} - {1} - Try to send separator...'.format(str(chat_id), article_id))
         self.bot.send_message(chat_id, '-' * 10)
-        logger.info(
+        logger.debug(
             'Bot: User {0} - {1} -  Separator sented'.format(str(chat_id), article_id))
 
     def _send_article_keywords(self, chat_id: Union[int, str],
@@ -38,10 +38,10 @@ class ArticleBot:
             (', '.join(article_match_words)
                 if article_match_words else "Не обнаружено.")
 
-        logger.info(
+        logger.debug(
             'Bot: User {0} - {1} - Try to send key words...'.format(str(chat_id), article_id))
         self.bot.send_message(chat_id, re_text)
-        logger.info(
+        logger.debug(
             'Bot: User {0} - {1} -  Key words sented'.format(str(chat_id), article_id))
 
     def _send_article_translate_link(self, chat_id: Union[int, str], article_id: str,
@@ -54,20 +54,20 @@ class ArticleBot:
         )
         translate_link_text = f'[Перевод статьи на Google Translate]({translate_link})'
 
-        logger.info(
+        logger.debug(
             'Bot: User {0} - {1} - Try to send translate link...'.format(str(chat_id), article_id))
         self.bot.send_message(
             chat_id, translate_link_text, disable_web_page_preview=True, parse_mode='Markdown')
-        logger.info(
+        logger.debug(
             'Bot: User {0} - {1} -  Translate link sented'.format(str(chat_id), article_id))
 
     def _send_full_article_text(self, chat_id: Union[int, str], article_id: str, text: str) -> None:
         try:
-            logger.info(
+            logger.debug(
                 'Bot: User {0} - {1} - Try to send full text message...'.format(str(chat_id), article_id))
             self.bot.send_message(
                 chat_id, text, disable_web_page_preview=True)
-            logger.info(
+            logger.debug(
                 'Bot: User {0} - {1} - Message sented'.format(str(chat_id), article_id))
         except Exception as error:
             logger.exception(error)
@@ -76,14 +76,14 @@ class ArticleBot:
         message_part = 0
         for x in range(0, len(text), 4096):
             try:
-                logger.info(
+                logger.debug(
                     'Bot: User {0} - {1} - Try to send text message part...'.format(str(chat_id), article_id))
                 self.bot.send_message(
                     chat_id,
                     text[x:x + 4096],
                     disable_web_page_preview=True
                 )
-                logger.info(
+                logger.debug(
                     'Bot: User {0} - {1} - Message part sented'.format(str(chat_id), article_id))
             except Exception as error:
                 logger.exception(error)
@@ -96,23 +96,23 @@ class ArticleBot:
                              ) -> Union[list, None]:
         try:
             if not forward:
-                logger.info(
+                logger.debug(
                     'Bot: User {0} - {1} - Try to send photos'.format(str(chat_id), article_id))
                 message_to_forward = self.bot.send_media_group(
                     chat_id, images_group)
-                logger.info(
+                logger.debug(
                     'Bot: User {0} - {1} - Photos sented'.format(str(chat_id), article_id))
                 return message_to_forward
             else:
-                logger.info(
-                    'Bot: User {0} - {1} - Try to send photos'.format(str(chat_id), article_id))
+                logger.debug(
+                    'Bot: User {0} - {1} - Try to forward photos'.format(str(chat_id), article_id))
                 self.bot.send_media_group(
                     chat_id,
                     [InputMediaPhoto(image.photo[0].file_id)
                         for image in forward_images_message]
                 )
-                logger.info(
-                    'Bot: User {0} - {1} - Photos sented'.format(str(chat_id), article_id))
+                logger.debug(
+                    'Bot: User {0} - {1} - Photos forwarded'.format(str(chat_id), article_id))
                 return None
 
         except Exception as error:
@@ -137,8 +137,8 @@ class ArticleBot:
                             [article.language, self.translate_language])
                     )['text'][0]
             except:
-                logger.warning(
-                    'Can"t translate text using Yandex.Translate')
+                logger.debug(
+                    f'Bot: Article {article.id} - Can"t translate text using Yandex.Translate')
 
         return translated
 
@@ -211,5 +211,7 @@ class ArticleBot:
                 else:
                     self._send_article_images(chat_id=user_id, article_id=article.id, images_group=images_to_send,
                                               forward=True, forward_images_message=message_to_forward)
+
+            logger.info(f'Bot: {article.id} - Article sent to user {user_id}')
 
         return 0

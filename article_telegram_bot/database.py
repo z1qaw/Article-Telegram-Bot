@@ -6,6 +6,24 @@ import psycopg2
 from loguru import logger
 
 
+def retry_on_error(f):
+    def wrapper(*args):
+        db_instanse = args[0]
+
+        for i in range(db_instanse.max_retry):
+            try:
+                f(*args)
+                break
+            except Exception as error:
+                logger.exception(error)
+                time.sleep(0.3)
+
+            if not db_instanse.retry:
+                break
+
+    return wrapper
+
+
 class Database(threading.Thread):
     def __init__(self, path: str, retry: bool = True, max_retry: int = 10) -> None:
         super(Database, self).__init__()
@@ -19,171 +37,97 @@ class Database(threading.Thread):
         self.tables_overflow_check_time = 5 * 60
         self.checker_tables = []
 
+    @retry_on_error
     def check_table(self, table_name: str) -> None:
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'''CREATE TABLE IF NOT EXISTS \"{table_name}\" (
-                            id SERIAL PRIMARY KEY,
-                            uri text,
-                            add_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                        )'''
-                    )
-                    break
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.3)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'''CREATE TABLE IF NOT EXISTS \"{table_name}\" (
+                    id SERIAL PRIMARY KEY,
+                    uri text,
+                    add_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )'''
+            )
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def delete_table(self, table_name: str) -> None:
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'DROP TABLE IF EXISTS {table_name}'
-                    )
-                    break
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.1)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'DROP TABLE IF EXISTS {table_name}'
+            )
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def check_user_table(self) -> None:
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        """CREATE TABLE IF NOT EXISTS \"users\" (
-                            id SERIAL PRIMARY KEY,
-                            telegram_id integer,
-                            add_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                        )"""
-                    )
-                    break
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.3)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """CREATE TABLE IF NOT EXISTS \"users\" (
+                    id SERIAL PRIMARY KEY,
+                    telegram_id integer,
+                    add_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )"""
+            )
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def insert_user_id(self, user_id: Union[str, int]) -> None:
         self.check_user_table()
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'INSERT INTO users (telegram_id) VALUES ({user_id})')
-                break
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.1)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'INSERT INTO users (telegram_id) VALUES ({user_id})')
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def get_total_rows_count(self) -> Union[list, None]:
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'SELECT SUM(n_live_tup) FROM pg_stat_user_tables;')
-                    result = cursor.fetchone()
-                    return result
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.1)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'SELECT SUM(n_live_tup) FROM pg_stat_user_tables;')
+            result = cursor.fetchone()
+            return result
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def is_user_exist(self, user_id: Union[str, int]) -> Union[bool, None]:
         self.check_user_table()
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'SELECT COUNT(*) FROM users WHERE telegram_id = {user_id}'
-                    )
-                    exists = cursor.fetchone()
-                    is_exists = True if exists[0] else False
-                    return is_exists
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.2)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'SELECT COUNT(*) FROM users WHERE telegram_id = {user_id}'
+            )
+            exists = cursor.fetchone()
+            is_exists = True if exists[0] else False
+            return is_exists
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def delete_user_id(self, user_id: Union[str, int]) -> None:
         self.check_user_table()
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'DELETE FROM users WHERE telegram_id = {user_id}'
-                    )
-                    break
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.2)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'DELETE FROM users WHERE telegram_id = {user_id}'
+            )
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def get_users_list(self) -> Union[List[str], None]:
         self.check_user_table()
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute('SELECT * FROM users')
-                    data = cursor.fetchall()
+        with self.connection.cursor() as cursor:
+            cursor.execute('SELECT * FROM users')
+            data = cursor.fetchall()
 
-                    ids = []
-                    for row in data:
-                        ids.append(row[1])
-                    return ids
-            except:
-                time.sleep(0.2)
+            ids = []
+            for row in data:
+                ids.append(row[1])
+            return ids
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def insert_uri(self, table_name: str, uri: str) -> None:
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'INSERT INTO {table_name} (uri) VALUES (\'{uri}\')'
-                    )
-                    break
-            except Exception as error:
-                logger.exception(error)
-                time.sleep(0.1)
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'INSERT INTO {table_name} (uri) VALUES (\'{uri}\')'
+            )
 
-            if not self.retry:
-                break
-
+    @retry_on_error
     def is_exist(self, table_name: str, uri: str) -> Union[bool, None]:
-        for i in range(self.max_retry):
-            try:
-                with self.connection.cursor() as cursor:
-                    cursor.execute(
-                        f'SELECT COUNT(*) FROM {table_name} WHERE uri = \'{uri}\''
-                    )
-                    exists = cursor.fetchone()
-                    is_exists = True if exists[0] else False
-                    return is_exists
-            except:
-                time.sleep(0.2)
-
-            if not self.retry:
-                break
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                f'SELECT COUNT(*) FROM {table_name} WHERE uri = \'{uri}\''
+            )
+            exists = cursor.fetchone()
+            is_exists = True if exists[0] else False
+            return is_exists
 
     def run(self) -> None:
         while True:
